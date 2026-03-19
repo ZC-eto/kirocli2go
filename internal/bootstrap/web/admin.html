@@ -682,7 +682,15 @@
 
       .account-table thead,
       .proxy-table thead {
-        display: none;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
 
       .account-table,
@@ -1439,7 +1447,7 @@
             <div class="weight-editor">
               <div class="cell-title">${account.weight || 100}</div>
               <div class="row-actions">
-                <input type="number" min="1" value="${account.weight || 100}" data-weight-input="${account.id}">
+                <input type="number" min="1" aria-label="账号 ${account.id || '-'} 的权重" value="${account.weight || 100}" data-weight-input="${account.id}">
                 <button class="button-warning" data-action="weight" data-id="${account.id}">保存</button>
               </div>
             </div>
