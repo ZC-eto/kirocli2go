@@ -390,11 +390,8 @@ func (h *Handler) handleImportBulk(w http.ResponseWriter, r *http.Request) {
 		ProxyGroupID:  strings.TrimSpace(payload.ProxyGroupID),
 	})
 	if err != nil {
-		status := http.StatusBadRequest
-		if result.Imported > 0 {
-			status = http.StatusOK
-		}
-		w.WriteHeader(status)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 	views := make([]map[string]any, 0, len(result.Accounts))
 	for _, snapshot := range result.Accounts {
@@ -493,18 +490,24 @@ func (h *Handler) handleProxyGroupImport(w http.ResponseWriter, r *http.Request)
 		Groups:     groups,
 	})
 	if err != nil {
-		status := http.StatusBadRequest
-		if result.Imported > 0 {
-			status = http.StatusOK
-		}
-		w.WriteHeader(status)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	views := make([]map[string]any, 0, len(result.Groups))
+	for _, group := range result.Groups {
+		views = append(views, proxyGroupSnapshotView(group))
 	}
 
 	_ = json.NewEncoder(w).Encode(map[string]any{
 		"success": err == nil && len(result.Errors) == 0,
 		"partial": result.Imported > 0 && len(result.Errors) > 0,
-		"message": batchImportMessage("proxy groups", result.Imported, 0, result.Errors, err),
-		"result":  result,
+		"message": batchImportMessage("proxy groups", result.Imported, len(result.Errors), result.Errors, err),
+		"result": map[string]any{
+			"imported": result.Imported,
+			"groups":   views,
+			"errors":   result.Errors,
+		},
 	})
 }
 
