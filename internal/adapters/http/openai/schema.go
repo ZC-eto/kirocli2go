@@ -16,7 +16,7 @@ type Message struct {
 	ToolCallID string     `json:"tool_call_id,omitempty"`
 }
 
-type RawContent json.RawMessage
+type RawContent = json.RawMessage
 
 type ToolCall struct {
 	ID       string       `json:"id"`

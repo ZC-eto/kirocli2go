@@ -10,14 +10,14 @@ type MessagesRequest struct {
 	Tools    []ToolDefinition `json:"tools,omitempty"`
 }
 
-type RawSystem json.RawMessage
+type RawSystem = json.RawMessage
 
 type Message struct {
 	Role    string     `json:"role"`
 	Content RawContent `json:"content"`
 }
 
-type RawContent json.RawMessage
+type RawContent = json.RawMessage
 
 type ContentBlock struct {
 	Type      string          `json:"type"`
