@@ -10,15 +10,18 @@
   <style>
     :root {
       --bg: #eef3f1;
-      --panel: rgba(255, 255, 255, 0.9);
+      --panel: rgba(255, 255, 255, 0.92);
       --panel-strong: #ffffff;
+      --panel-soft: rgba(248, 251, 250, 0.9);
       --border: rgba(16, 62, 51, 0.12);
+      --border-strong: rgba(16, 62, 51, 0.2);
       --text: #11322b;
       --muted: #58766d;
       --accent: #0f766e;
       --accent-strong: #115e59;
       --danger: #b42318;
       --warning: #b45309;
+      --ring: rgba(15, 118, 110, 0.22);
       --shadow: 0 18px 50px rgba(15, 118, 110, 0.08);
     }
 
@@ -35,16 +38,16 @@
     }
 
     .shell {
-      max-width: 1400px;
+      max-width: 1520px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 22px 20px 44px;
     }
 
     .hero {
       display: grid;
-      grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
-      gap: 18px;
-      margin-bottom: 20px;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+      gap: 16px;
+      margin-bottom: 18px;
     }
 
     .hero-card, .card, .login-card {
@@ -56,7 +59,7 @@
     }
 
     .hero-card {
-      padding: 28px;
+      padding: 24px 26px;
       position: relative;
       overflow: hidden;
     }
@@ -64,11 +67,11 @@
     .hero-card::after {
       content: "";
       position: absolute;
-      inset: auto -12% -38% 40%;
-      height: 180px;
+      inset: auto -8% -42% 52%;
+      height: 134px;
       background: linear-gradient(90deg, rgba(15, 118, 110, 0.26), rgba(17, 24, 39, 0.08));
-      transform: rotate(-7deg);
-      border-radius: 40px;
+      transform: rotate(-5deg);
+      border-radius: 36px;
       pointer-events: none;
     }
 
@@ -83,14 +86,15 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(28px, 5vw, 44px);
-      line-height: 0.95;
+      font-size: clamp(24px, 4.1vw, 38px);
+      line-height: 0.98;
       letter-spacing: -0.04em;
+      max-width: 8.5ch;
     }
 
     .hero-copy {
-      max-width: 720px;
-      margin-top: 18px;
+      max-width: 62ch;
+      margin-top: 14px;
       color: var(--muted);
       line-height: 1.65;
       font-size: 15px;
@@ -132,12 +136,12 @@
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
+      gap: 14px;
       margin-bottom: 18px;
     }
 
     .stat {
-      padding: 16px;
+      padding: 18px;
       border-radius: 18px;
       background: var(--panel);
       border: 1px solid var(--border);
@@ -160,18 +164,24 @@
 
     .layout {
       display: grid;
-      grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.9fr);
-      gap: 18px;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
+      gap: 16px;
+      align-items: start;
     }
 
     .stack {
       display: grid;
-      gap: 18px;
+      gap: 16px;
       align-content: start;
     }
 
+    .stack.side {
+      position: sticky;
+      top: 16px;
+    }
+
     .card {
-      padding: 20px;
+      padding: 20px 22px;
     }
 
     .card-header {
@@ -183,9 +193,21 @@
       flex-wrap: wrap;
     }
 
+    .card-headline {
+      display: grid;
+      gap: 4px;
+    }
+
     .card-title {
       margin: 0;
       font-size: 18px;
+    }
+
+    .card-subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
     }
 
     .actions {
@@ -194,17 +216,41 @@
       flex-wrap: wrap;
     }
 
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .quick-actions .button-danger {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+
     button, .button {
       border: 0;
       border-radius: 14px;
+      min-height: 44px;
       padding: 11px 14px;
       cursor: pointer;
       font: inherit;
       font-weight: 600;
-      transition: transform 160ms ease, background 160ms ease, opacity 160ms ease;
+      transition: transform 160ms ease, background 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
     }
 
-    button:hover { transform: translateY(-1px); }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(15, 118, 110, 0.08);
+    }
+    button:focus-visible,
+    .button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible,
+    summary:focus-visible {
+      outline: 3px solid var(--ring);
+      outline-offset: 2px;
+    }
     .button-primary { background: var(--accent); color: #fff; }
     .button-secondary { background: rgba(15, 118, 110, 0.08); color: var(--accent-strong); }
     .button-danger { background: rgba(180, 35, 24, 0.12); color: var(--danger); }
@@ -216,8 +262,18 @@
       border: 1px solid var(--border);
       padding: 12px 14px;
       font: inherit;
-      background: rgba(255, 255, 255, 0.88);
+      min-height: 46px;
+      background: rgba(255, 255, 255, 0.92);
       color: var(--text);
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      min-height: 16px;
+      padding: 0;
+      border-radius: 4px;
+      cursor: pointer;
     }
 
     input:focus, select:focus, textarea:focus {
@@ -226,17 +282,61 @@
     }
 
     textarea {
-      min-height: 108px;
+      min-height: 132px;
       resize: vertical;
       font-family: "IBM Plex Mono", monospace;
       font-size: 13px;
+      line-height: 1.6;
     }
 
     .filters {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 12px;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+      min-width: 0;
+    }
+
+    .field-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--muted);
+    }
+
+    legend.field-label {
+      margin-bottom: 4px;
+      padding: 0;
+    }
+
+    .field-hint {
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .section-intro {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.65;
     }
 
     .log-list, .account-list, .model-list {
@@ -296,21 +396,27 @@
       gap: 12px;
       flex-wrap: wrap;
       margin-bottom: 12px;
-      align-items: center;
+      align-items: end;
+    }
+
+    .table-toolbar-meta {
+      display: grid;
+      gap: 4px;
     }
 
     .table-wrap {
       overflow: auto;
       border: 1px solid rgba(17, 50, 43, 0.08);
       border-radius: 18px;
-      background: rgba(255,255,255,0.72);
+      background: rgba(255,255,255,0.78);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
     }
 
     .account-table,
     .proxy-table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1120px;
+      min-width: 1020px;
     }
 
     .account-table th,
@@ -331,7 +437,7 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--muted);
-      background: rgba(15, 118, 110, 0.04);
+      background: rgba(236, 244, 242, 0.96);
       position: sticky;
       top: 0;
       z-index: 1;
@@ -357,18 +463,37 @@
       font-size: 12px;
       color: var(--muted);
       word-break: break-all;
+      line-height: 1.45;
     }
 
     .row-actions {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     .row-actions button {
+      min-height: 36px;
       padding: 8px 10px;
       border-radius: 12px;
       font-size: 12px;
+    }
+
+    .weight-editor {
+      display: grid;
+      gap: 8px;
+    }
+
+    .weight-editor input {
+      max-width: 92px;
+      min-height: 36px;
+      padding: 8px 10px;
+    }
+
+    .table-empty td {
+      padding: 18px 14px;
+      text-align: center;
     }
 
     .mini-note {
@@ -398,6 +523,17 @@
 
     .muted { color: var(--muted); }
     .hidden { display: none !important; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
     .busy button,
     .busy input,
     .busy select,
@@ -413,6 +549,60 @@
     }
     .message.error { background: rgba(180, 35, 24, 0.12); color: var(--danger); }
     .message.success { background: rgba(15, 118, 110, 0.12); color: var(--accent-strong); }
+
+    .json-panel {
+      margin: 0;
+      max-height: 360px;
+      overflow: auto;
+      border-radius: 16px;
+      border: 1px solid rgba(17, 50, 43, 0.08);
+      background: var(--panel-soft);
+      padding: 14px;
+      white-space: pre-wrap;
+      font-size: 12px;
+      line-height: 1.58;
+      color: var(--muted);
+    }
+
+    .fold-card {
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .fold-card summary {
+      list-style: none;
+    }
+
+    .fold-card summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .fold-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 18px 20px;
+      cursor: pointer;
+    }
+
+    .fold-title {
+      display: grid;
+      gap: 4px;
+    }
+
+    .fold-title strong {
+      font-size: 16px;
+    }
+
+    .fold-content {
+      display: grid;
+      gap: 12px;
+      padding: 0 20px 20px;
+    }
 
     .login-shell {
       min-height: 100vh;
@@ -438,65 +628,160 @@
       margin-bottom: 16px;
     }
 
-    .form-grid {
-      display: grid;
-      gap: 12px;
-    }
-
     .toolbar-note {
       font-size: 12px;
       color: var(--muted);
+      line-height: 1.55;
+    }
+
+    @media (max-width: 1260px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .stack.side {
+        position: static;
+      }
     }
 
     @media (max-width: 1080px) {
-      .hero, .layout, .split {
+      .hero, .split {
         grid-template-columns: 1fr;
       }
       .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .quick-actions {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
     @media (max-width: 720px) {
       .shell { padding: 14px; }
-      .stats-grid, .filters { grid-template-columns: 1fr; }
+      .stats-grid,
+      .filters,
+      .field-row,
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+      .hero-card,
+      .hero-side,
+      .card,
+      .login-card {
+        padding: 18px;
+      }
+      h1 {
+        max-width: none;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .account-table,
+      .proxy-table {
+        min-width: 0;
+      }
+
+      .account-table thead,
+      .proxy-table thead {
+        display: none;
+      }
+
+      .account-table,
+      .account-table tbody,
+      .account-table tr,
+      .account-table td,
+      .account-table th[scope="row"],
+      .proxy-table,
+      .proxy-table tbody,
+      .proxy-table tr,
+      .proxy-table td,
+      .proxy-table th[scope="row"] {
+        display: block;
+        width: 100%;
+      }
+
+      .account-table tr,
+      .proxy-table tr {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(17, 50, 43, 0.08);
+      }
+
+      .account-table td,
+      .account-table th[scope="row"],
+      .proxy-table td,
+      .proxy-table th[scope="row"] {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr);
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 0;
+      }
+
+      .account-table td::before,
+      .account-table th[scope="row"]::before,
+      .proxy-table td::before,
+      .proxy-table th[scope="row"]::before {
+        content: attr(data-label);
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .row-actions {
+        justify-content: flex-start;
+      }
+
+      .table-empty td,
+      .table-empty th {
+        display: block !important;
+      }
+
+      .table-empty td::before,
+      .table-empty th::before {
+        content: none !important;
+      }
     }
   </style>
 </head>
 <body>
   <div id="loginView" class="login-shell">
     <div class="login-card">
-      <div class="eyebrow">kirocli-go admin</div>
+      <div class="eyebrow">kirocli-go 控制台</div>
       <h2>连接管理控制台</h2>
       <p>输入 `KIROCLI_GO_API_TOKEN` 对应的 token。页面本身不需要鉴权，但所有管理 API 都需要带 Bearer token。</p>
-      <div id="loginMessage" class="message error hidden"></div>
-      <div class="form-grid">
-        <input id="apiTokenInput" type="password" placeholder="Bearer token">
-        <button id="loginButton" class="button-primary">进入控制台</button>
-      </div>
+      <div id="loginMessage" class="message error hidden" role="alert"></div>
+      <form id="loginForm" class="field-grid">
+        <label class="field" for="apiTokenInput">
+          <span class="field-label">Admin Token</span>
+          <input id="apiTokenInput" type="password" placeholder="Bearer token" autocomplete="current-password">
+          <span class="field-hint">建议直接粘贴完整的 Bearer token，页面只保存在当前浏览器的 localStorage。</span>
+        </label>
+        <button id="loginButton" type="submit" class="button-primary">进入控制台</button>
+      </form>
     </div>
   </div>
 
   <main id="appView" class="shell hidden">
     <section class="hero">
       <article class="hero-card">
-        <div class="eyebrow">Control Plane</div>
+        <div class="eyebrow">控制平面</div>
         <h1>kirocli-go<br>运行与账号面板</h1>
         <p class="hero-copy">
-          这一页直接消费当前 `kirocli-go` 的 admin API。重点是账号状态、模型目录、请求日志与常用操作，不额外依赖前端框架。
+          用于统一查看账号池、代理组、模型目录和请求日志。当前页面直接消费 admin API，重点保证批量操作、状态回看和线上维护都能在一屏内完成。
         </p>
         <div class="hero-meta">
-          <span id="versionPill" class="pill">version: -</span>
-          <span id="modePill" class="pill">catalog: -</span>
-          <span class="pill">auth: bearer</span>
+          <span id="versionPill" class="pill">版本: -</span>
+          <span id="modePill" class="pill">目录: -</span>
+          <span class="pill">鉴权: Bearer</span>
         </div>
       </article>
       <aside class="hero-side hero-card">
         <div>
           <h2>快速操作</h2>
-          <p class="toolbar-note">刷新状态不会 reload 页面，只会重新拉取 admin API。</p>
+          <p class="toolbar-note">刷新操作不会重载页面，只会重新拉取 admin API；账号、模型和代理列表会按当前视图保留。</p>
         </div>
-        <div class="actions">
+        <div class="quick-actions">
           <button id="refreshAllButton" class="button-primary">刷新全局状态</button>
           <button id="refreshModelsButton" class="button-secondary">刷新模型目录</button>
           <button id="warmPoolButton" class="button-secondary">立即预热活跃池</button>
@@ -506,68 +791,95 @@
       </aside>
     </section>
 
-    <div id="globalMessage" class="message hidden"></div>
+    <div id="globalMessage" class="message hidden" role="status" aria-live="polite"></div>
 
     <section class="stats-grid">
-      <div class="stat"><div class="stat-label">Accounts</div><div id="statAccounts" class="stat-value">0</div></div>
-      <div class="stat"><div class="stat-label">Active</div><div id="statActive" class="stat-value">0</div></div>
-      <div class="stat"><div class="stat-label">Requests</div><div id="statRequests" class="stat-value">0</div></div>
-      <div class="stat"><div class="stat-label">Credits</div><div id="statCredits" class="stat-value">0</div></div>
+      <div class="stat"><div class="stat-label">账号总数</div><div id="statAccounts" class="stat-value">0</div></div>
+      <div class="stat"><div class="stat-label">活跃账号</div><div id="statActive" class="stat-value">0</div></div>
+      <div class="stat"><div class="stat-label">请求数</div><div id="statRequests" class="stat-value">0</div></div>
+      <div class="stat"><div class="stat-label">累计 Credits</div><div id="statCredits" class="stat-value">0</div></div>
     </section>
 
     <section class="layout">
       <div class="stack">
         <section class="card">
           <div class="card-header">
-            <h2 class="card-title">账号池</h2>
+            <div class="card-headline">
+              <h2 class="card-title">账号池</h2>
+              <p class="card-subtitle">统一查看账号状态、代理分组、权重与凭证更新时间，筛选后的结果可直接参与批量匹配。</p>
+            </div>
             <div class="actions">
               <button id="selectVisibleAccountsButton" class="button-secondary">选择筛选结果</button>
               <button id="clearAccountSelectionButton" class="button-secondary">清空选择</button>
               <button id="reloadAccountsButton" class="button-secondary">刷新账号列表</button>
             </div>
           </div>
-          <div class="filters" style="margin-bottom: 16px;">
-            <select id="accountFilterPool">
-              <option value="">全部池状态</option>
-              <option value="in">仅池内</option>
-              <option value="out">仅池外</option>
-            </select>
-            <select id="accountFilterStatus">
-              <option value="">全部账号状态</option>
-              <option value="active">active</option>
-              <option value="cooling">cooling</option>
-              <option value="disabled">disabled</option>
-              <option value="banned">banned</option>
-            </select>
-            <select id="accountFilterProxyGroup">
-              <option value="">全部代理组</option>
-            </select>
-            <select id="accountSortBy">
-              <option value="pool_first">池内优先</option>
-              <option value="failures_desc">失败次数降序</option>
-              <option value="last_used_desc">最近使用优先</option>
-              <option value="weight_desc">权重降序</option>
-              <option value="id_asc">ID 升序</option>
-            </select>
-            <button id="applyAccountViewButton" class="button-secondary">应用视图</button>
-          </div>
+          <p class="section-intro">默认按当前视图显示账号。若你未手动勾选账号，后续的批量分配会直接使用这里筛选出来的可见结果。</p>
+          <form id="accountFilterForm" class="field-grid">
+            <fieldset class="field-grid" style="border:0;padding:0;margin:0;">
+              <legend class="field-label">账号筛选与排序</legend>
+              <div class="filters">
+                <label class="field" for="accountFilterPool">
+                  <span class="field-label">池状态</span>
+                  <select id="accountFilterPool">
+                    <option value="">全部池状态</option>
+                    <option value="in">仅池内</option>
+                    <option value="out">仅池外</option>
+                  </select>
+                </label>
+                <label class="field" for="accountFilterStatus">
+                  <span class="field-label">账号状态</span>
+                  <select id="accountFilterStatus">
+                    <option value="">全部账号状态</option>
+                    <option value="active">活跃</option>
+                    <option value="cooling">冷却</option>
+                    <option value="disabled">禁用</option>
+                    <option value="banned">封禁</option>
+                  </select>
+                </label>
+                <label class="field" for="accountFilterProxyGroup">
+                  <span class="field-label">代理组</span>
+                  <select id="accountFilterProxyGroup">
+                    <option value="">全部代理组</option>
+                  </select>
+                </label>
+                <label class="field" for="accountSortBy">
+                  <span class="field-label">排序方式</span>
+                  <select id="accountSortBy">
+                    <option value="pool_first">池内优先</option>
+                    <option value="failures_desc">失败次数降序</option>
+                    <option value="last_used_desc">最近使用优先</option>
+                    <option value="weight_desc">权重降序</option>
+                    <option value="id_asc">ID 升序</option>
+                  </select>
+                </label>
+              </div>
+            </fieldset>
+            <div class="actions">
+              <button id="applyAccountViewButton" type="submit" class="button-secondary">应用筛选视图</button>
+            </div>
+          </form>
           <div class="table-toolbar">
-            <div class="toolbar-note">已选账号可直接参与代理组批量匹配；未选择时会使用当前筛选结果。</div>
-            <div class="toolbar-note">已选 <span id="selectedAccountCount">0</span> / <span id="visibleAccountCount">0</span></div>
+            <div class="table-toolbar-meta">
+              <div class="toolbar-note">已选账号可直接参与代理组批量匹配；若未手动选择，则使用当前筛选结果。</div>
+              <div class="toolbar-note">建议先筛出目标账号，再进行批量绑定，避免误把冷却或禁用账号一并分配。</div>
+            </div>
+            <div class="toolbar-note">已选 <span id="selectedAccountCount">0</span> / 当前可见 <span id="visibleAccountCount">0</span></div>
           </div>
           <div class="table-wrap">
             <table class="account-table">
+              <caption class="sr-only">账号池列表</caption>
               <thead>
                 <tr>
-                  <th style="width:44px;">选</th>
-                  <th>账号</th>
-                  <th>来源</th>
-                  <th>状态</th>
-                  <th>代理组</th>
-                  <th>权重</th>
-                  <th>凭证</th>
-                  <th>时间</th>
-                  <th>操作</th>
+                  <th scope="col" style="width:44px;">选</th>
+                  <th scope="col">账号</th>
+                  <th scope="col">来源</th>
+                  <th scope="col">状态</th>
+                  <th scope="col">代理组</th>
+                  <th scope="col">权重</th>
+                  <th scope="col">凭证</th>
+                  <th scope="col">时间</th>
+                  <th scope="col">操作</th>
                 </tr>
               </thead>
               <tbody id="accountTableBody"></tbody>
@@ -577,59 +889,90 @@
 
         <section class="card">
           <div class="card-header">
-            <h2 class="card-title">批量导入账号</h2>
-            <div class="actions">
-              <button id="bulkImportButton" class="button-primary">批量导入账号</button>
+            <div class="card-headline">
+              <h2 class="card-title">批量导入账号</h2>
+              <p class="card-subtitle">支持 JSON 数组、逐行 JSON 或简单文本。导入时可附带默认代理组和默认权重。</p>
             </div>
           </div>
-          <div class="form-grid">
-            <textarea id="bulkAccountsInput" placeholder="粘贴 JSON 数组、每行 JSON，或原始账号文件内容。支持 clientId/clientSecret/refreshToken/email 等字段。"></textarea>
-            <input id="bulkAccountsDefaultGroup" placeholder="默认代理组 ID，可留空">
-            <input id="bulkAccountsWeight" type="number" min="1" placeholder="默认权重，留空则使用输入值">
-          </div>
+          <form id="bulkImportForm" class="field-grid">
+            <label class="field" for="bulkAccountsInput">
+              <span class="field-label">账号内容</span>
+              <textarea id="bulkAccountsInput" placeholder="粘贴 JSON 数组、每行 JSON，或原始账号文件内容。支持 clientId/clientSecret/refreshToken/email 等字段。"></textarea>
+              <span class="field-hint">支持 `clientId/clientSecret/refreshToken/email` 等字段；未提供 `id` 时会自动推导。</span>
+            </label>
+            <div class="field-row">
+              <label class="field" for="bulkAccountsDefaultGroup">
+                <span class="field-label">默认代理组 ID</span>
+                <input id="bulkAccountsDefaultGroup" placeholder="默认代理组 ID，可留空">
+              </label>
+              <label class="field" for="bulkAccountsWeight">
+                <span class="field-label">默认权重</span>
+                <input id="bulkAccountsWeight" type="number" min="1" placeholder="默认权重，留空则使用输入值">
+              </label>
+            </div>
+            <div class="actions">
+              <button id="bulkImportButton" type="submit" class="button-primary">批量导入账号</button>
+            </div>
+          </form>
           <div class="mini-note" style="margin-top:10px;">若条目里没有 `id`，系统会优先使用 `email`、`clientId` 或自动生成 ID。</div>
         </section>
 
         <section class="card">
           <div class="card-header">
-            <h2 class="card-title">代理组导入</h2>
+            <div class="card-headline">
+              <h2 class="card-title">代理组导入</h2>
+              <p class="card-subtitle">每个代理组绑定一条代理 URL，多个账号可以共享同一个代理组。</p>
+            </div>
+          </div>
+          <form id="proxyGroupImportForm" class="field-grid">
+            <label class="field" for="proxyGroupsInput">
+              <span class="field-label">代理组内容</span>
+              <textarea id="proxyGroupsInput" placeholder="每行一个代理 URL，或 JSON 内容。支持裸格式 login:password@host:port、name|proxy_url、id|name|proxy_url，以及 {id,name,proxy_url,notes,enabled}。"></textarea>
+              <span class="field-hint">支持裸格式 `login:password@host:port`，后端会自动补齐为 HTTP 代理 URL。</span>
+            </label>
+            <label class="field" for="proxyGroupNamePrefix">
+              <span class="field-label">名称前缀</span>
+              <input id="proxyGroupNamePrefix" value="proxy" placeholder="名称前缀">
+            </label>
+            <div class="actions">
+              <button id="proxyGroupImportButton" type="submit" class="button-primary">导入代理组</button>
+            </div>
+          </form>
+          <div class="mini-note" style="margin-top:10px;">每个代理组只绑定一条代理 URL，一个代理组可以绑定多个账号。</div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <div class="card-headline">
+              <h2 class="card-title">代理组列表</h2>
+              <p class="card-subtitle">支持启用、禁用、删除，也可以与账号池联动做批量分配。</p>
+            </div>
             <div class="actions">
               <button id="selectVisibleProxyGroupsButton" class="button-secondary">选择可见项</button>
               <button id="clearProxyGroupSelectionButton" class="button-secondary">清空选择</button>
               <button id="reloadProxyGroupsButton" class="button-secondary">刷新代理组</button>
             </div>
           </div>
-          <div class="form-grid">
-            <textarea id="proxyGroupsInput" placeholder="每行一个代理 URL，或 JSON 内容。支持裸格式 login:password@host:port、name|proxy_url、id|name|proxy_url，以及 {id,name,proxy_url,notes,enabled}。"></textarea>
-            <input id="proxyGroupNamePrefix" value="proxy" placeholder="名称前缀">
-            <button id="proxyGroupImportButton" class="button-primary">导入代理组</button>
-          </div>
-          <div class="mini-note" style="margin-top:10px;">每个代理组只绑定一条代理 URL，一个代理组可以绑定多个账号。</div>
-        </section>
-
-        <section class="card">
-          <div class="card-header">
-            <h2 class="card-title">代理组列表</h2>
-            <div class="actions">
-              <button id="reloadProxyGroupsButtonTop" class="button-secondary">刷新代理组</button>
-            </div>
-          </div>
           <div class="table-toolbar">
-            <div class="toolbar-note">支持启用、禁用、删除和参与账号分配。</div>
-            <div class="toolbar-note">已选 <span id="selectedProxyGroupCount">0</span> / <span id="visibleProxyGroupCount">0</span></div>
+            <div class="table-toolbar-meta">
+              <div class="toolbar-note">可选中的代理组会直接参与“账号与代理分配”。</div>
+              <div class="toolbar-note">建议先清理无效代理，再做批量绑定，避免把账号挂到不可用组上。</div>
+            </div>
+            <div class="toolbar-note">已选 <span id="selectedProxyGroupCount">0</span> / 当前可见 <span id="visibleProxyGroupCount">0</span></div>
           </div>
           <div class="table-wrap">
             <table class="proxy-table">
+              <caption class="sr-only">代理组列表</caption>
               <thead>
                 <tr>
-                  <th style="width:44px;">选</th>
-                  <th>代理组</th>
-                  <th>代理 URL</th>
-                  <th>状态</th>
-                  <th>账号数</th>
-                  <th>备注</th>
-                  <th>时间</th>
-                  <th>操作</th>
+                  <th scope="col" style="width:44px;">选</th>
+                  <th scope="col">代理组</th>
+                  <th scope="col">代理 URL</th>
+                  <th scope="col">状态</th>
+                  <th scope="col">账号数</th>
+                  <th scope="col">备注</th>
+                  <th scope="col">时间</th>
+                  <th scope="col">操作</th>
                 </tr>
               </thead>
               <tbody id="proxyGroupTableBody"></tbody>
@@ -639,19 +982,35 @@
 
         <section class="card">
           <div class="card-header">
-            <h2 class="card-title">账号与代理分配</h2>
+            <div class="card-headline">
+              <h2 class="card-title">账号与代理分配</h2>
+              <p class="card-subtitle">按顺序把多个账号分配到多个代理组。一个账号只能归属一个代理组，一个代理组可挂多个账号。</p>
+            </div>
           </div>
-          <div class="form-grid">
-            <input id="accountsPerProxy" type="number" min="1" value="5" placeholder="每个代理分配账号数">
-            <textarea id="matchAccountIds" placeholder="可选：账号 ID，每行一个。留空则使用当前选中的账号；如果也为空，则使用当前筛选结果。"></textarea>
-            <textarea id="matchProxyGroupIds" placeholder="可选：代理组 ID，每行一个。留空则使用当前选中的代理组；如果也为空，则使用当前代理组列表。"></textarea>
-            <button id="matchButton" class="button-primary">按顺序匹配账号到代理组</button>
-          </div>
+          <form id="matchForm" class="field-grid">
+            <label class="field" for="accountsPerProxy">
+              <span class="field-label">每个代理分配账号数</span>
+              <input id="accountsPerProxy" type="number" min="1" value="5" placeholder="每个代理分配账号数">
+            </label>
+            <label class="field" for="matchAccountIds">
+              <span class="field-label">账号 ID 列表（可选）</span>
+              <textarea id="matchAccountIds" placeholder="可选：账号 ID，每行一个。留空则使用当前选中的账号；如果也为空，则使用当前筛选结果。"></textarea>
+            </label>
+            <label class="field" for="matchProxyGroupIds">
+              <span class="field-label">代理组 ID 列表（可选）</span>
+              <textarea id="matchProxyGroupIds" placeholder="可选：代理组 ID，每行一个。留空则使用当前选中的代理组；如果也为空，则使用当前代理组列表。"></textarea>
+            </label>
+            <div class="field-hint">分配时会按顺序轮转代理组；已存在代理组绑定的账号会被新结果覆盖。</div>
+            <button id="matchButton" type="submit" class="button-primary">按顺序匹配账号到代理组</button>
+          </form>
         </section>
 
         <section class="card">
           <div class="card-header">
-            <h2 class="card-title">模型目录</h2>
+            <div class="card-headline">
+              <h2 class="card-title">模型目录</h2>
+              <p class="card-subtitle">用于确认目录来源、上次刷新时间和当前可见模型。这个列表主要服务于运行态排查。</p>
+            </div>
             <div class="actions">
               <button id="reloadModelViewButton" class="button-secondary">查看目录</button>
             </div>
@@ -662,66 +1021,122 @@
 
         <section class="card">
           <div class="card-header">
-            <h2 class="card-title">请求日志</h2>
+            <div class="card-headline">
+              <h2 class="card-title">请求日志</h2>
+              <p class="card-subtitle">按协议、端点、模型、账号和失败原因筛选，重点看重试、失败和异常信号。</p>
+            </div>
           </div>
-          <div class="filters">
-            <select id="filterProtocol">
-              <option value="">全部协议</option>
-              <option value="openai">openai</option>
-              <option value="anthropic">anthropic</option>
-            </select>
-            <input id="filterEndpoint" placeholder="endpoint">
-            <input id="filterModel" placeholder="model">
-            <input id="filterAccount" placeholder="account_id">
-            <select id="filterSuccess">
-              <option value="">全部结果</option>
-              <option value="true">success</option>
-              <option value="false">failure</option>
-            </select>
-            <input id="filterReason" placeholder="failure_reason">
-            <input id="filterBodySignal" placeholder="body_signal">
-            <input id="filterLimit" type="number" min="1" value="50" placeholder="limit">
-            <input id="filterOffset" type="number" min="0" value="0" placeholder="offset">
-          </div>
-          <div class="actions" style="margin-bottom: 12px;">
-            <button id="applyLogsFilterButton" class="button-primary">应用筛选</button>
-          </div>
+          <form id="logsFilterForm">
+            <fieldset class="filters" style="border:0;padding:0;margin:0 0 12px;">
+              <legend class="field-label">日志筛选</legend>
+              <label class="field" for="filterProtocol">
+                <span class="field-label">协议</span>
+                <select id="filterProtocol">
+                  <option value="">全部协议</option>
+                  <option value="openai">openai</option>
+                  <option value="anthropic">anthropic</option>
+                </select>
+              </label>
+              <label class="field" for="filterEndpoint">
+                <span class="field-label">端点</span>
+                <input id="filterEndpoint" placeholder="endpoint">
+              </label>
+              <label class="field" for="filterModel">
+                <span class="field-label">模型</span>
+                <input id="filterModel" placeholder="model">
+              </label>
+              <label class="field" for="filterAccount">
+                <span class="field-label">账号 ID</span>
+                <input id="filterAccount" placeholder="account_id">
+              </label>
+              <label class="field" for="filterSuccess">
+                <span class="field-label">结果</span>
+                <select id="filterSuccess">
+                  <option value="">全部结果</option>
+                  <option value="true">成功</option>
+                  <option value="false">失败</option>
+                </select>
+              </label>
+              <label class="field" for="filterReason">
+                <span class="field-label">失败原因</span>
+                <input id="filterReason" placeholder="failure_reason">
+              </label>
+              <label class="field" for="filterBodySignal">
+                <span class="field-label">Body Signal</span>
+                <input id="filterBodySignal" placeholder="body_signal">
+              </label>
+              <label class="field" for="filterLimit">
+                <span class="field-label">每页数量</span>
+                <input id="filterLimit" type="number" min="1" value="50" placeholder="limit">
+              </label>
+              <label class="field" for="filterOffset">
+                <span class="field-label">偏移量</span>
+                <input id="filterOffset" type="number" min="0" value="0" placeholder="offset">
+              </label>
+            </fieldset>
+            <div class="actions" style="margin-bottom: 12px;">
+              <button id="applyLogsFilterButton" type="submit" class="button-primary">应用筛选</button>
+            </div>
+          </form>
           <div id="logList" class="log-list"></div>
         </section>
       </div>
 
-      <aside class="stack">
-        <section class="card">
-          <div class="card-header"><h2 class="card-title">状态汇总</h2></div>
-          <div id="statusPanel" class="kv"></div>
-        </section>
+      <aside class="stack side">
         <section class="card">
           <div class="card-header">
-            <h2 class="card-title">运行诊断</h2>
+            <div class="card-headline">
+              <h2 class="card-title">状态汇总</h2>
+              <p class="card-subtitle">优先看池状态、请求成功率和最近错误，确认当前运行是否健康。</p>
+            </div>
+          </div>
+          <div id="statusPanel" class="kv"></div>
+        </section>
+        <details class="fold-card">
+          <summary class="fold-summary">
+            <div class="fold-title">
+              <strong>运行诊断</strong>
+              <span class="toolbar-note">诊断文件和运行态探针结果，默认折叠以减少首屏噪音。</span>
+            </div>
+            <span class="pill">JSON</span>
+          </summary>
+          <div class="fold-content">
             <div class="actions">
               <button id="reloadDoctorButton" class="button-secondary">刷新诊断</button>
             </div>
+            <pre id="doctorPanel" class="json-panel inline-mono"></pre>
           </div>
-          <pre id="doctorPanel" class="inline-mono" style="white-space: pre-wrap; font-size: 12px; line-height: 1.55; color: var(--muted);"></pre>
-        </section>
-        <section class="card">
-          <div class="card-header">
-            <h2 class="card-title">运行配置</h2>
+        </details>
+        <details class="fold-card">
+          <summary class="fold-summary">
+            <div class="fold-title">
+              <strong>运行配置</strong>
+              <span class="toolbar-note">查看当前环境配置、路径和代理状态，排查部署问题时使用。</span>
+            </div>
+            <span class="pill">JSON</span>
+          </summary>
+          <div class="fold-content">
             <div class="actions">
               <button id="reloadConfigButton" class="button-secondary">刷新配置</button>
             </div>
+            <pre id="configPanel" class="json-panel inline-mono"></pre>
           </div>
-          <pre id="configPanel" class="inline-mono" style="white-space: pre-wrap; font-size: 12px; line-height: 1.55; color: var(--muted);"></pre>
-        </section>
-        <section class="card">
-          <div class="card-header">
-            <h2 class="card-title">账号导出</h2>
+        </details>
+        <details class="fold-card">
+          <summary class="fold-summary">
+            <div class="fold-title">
+              <strong>账号导出</strong>
+              <span class="toolbar-note">导出当前账号视图和代理绑定结果，适合做核对或二次处理。</span>
+            </div>
+            <span class="pill">JSON</span>
+          </summary>
+          <div class="fold-content">
             <div class="actions">
               <button id="reloadExportButton" class="button-secondary">刷新导出</button>
             </div>
+            <pre id="exportPanel" class="json-panel inline-mono"></pre>
           </div>
-          <pre id="exportPanel" class="inline-mono" style="white-space: pre-wrap; font-size: 12px; line-height: 1.55; color: var(--muted);"></pre>
-        </section>
+        </details>
       </aside>
     </section>
   </main>
@@ -755,6 +1170,8 @@
     function showMessage(target, text, kind = 'error') {
       target.textContent = text;
       target.className = `message ${kind}`;
+      target.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+      target.setAttribute('aria-live', kind === 'error' ? 'assertive' : 'polite');
       target.classList.remove('hidden');
     }
 
@@ -766,7 +1183,13 @@
     function setBusy(flag, text = '') {
       busyCounter += flag ? 1 : -1;
       if (busyCounter < 0) busyCounter = 0;
-      document.body.classList.toggle('busy', busyCounter > 0);
+      const isBusy = busyCounter > 0;
+      document.body.classList.toggle('busy', isBusy);
+      document.body.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+      appView.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+      document.querySelectorAll('button, input, select, textarea').forEach((element) => {
+        element.disabled = isBusy;
+      });
       if (text) {
         showMessage(globalMessage, text, 'success');
       } else if (!busyCounter) {
@@ -803,10 +1226,51 @@
       const diff = Math.floor(Date.now() / 1000) - Number(value);
       if (Number.isNaN(diff)) return '-';
       const abs = Math.abs(diff);
-      if (abs < 60) return `${abs}s`;
-      if (abs < 3600) return `${Math.floor(abs / 60)}m`;
-      if (abs < 86400) return `${Math.floor(abs / 3600)}h`;
-      return `${Math.floor(abs / 86400)}d`;
+      if (abs < 60) return `${abs} 秒`;
+      if (abs < 3600) return `${Math.floor(abs / 60)} 分钟`;
+      if (abs < 86400) return `${Math.floor(abs / 3600)} 小时`;
+      return `${Math.floor(abs / 86400)} 天`;
+    }
+
+    function yesNo(value) {
+      return value ? '是' : '否';
+    }
+
+    function accountStatusLabel(status) {
+      const labels = {
+        active: '活跃',
+        cooling: '冷却',
+        disabled: '禁用',
+        banned: '封禁',
+      };
+      return labels[status] || status || '未知';
+    }
+
+    function actionLabel(action) {
+      const labels = {
+        refresh: '刷新凭证',
+        toggle: '切换状态',
+        delete: '删除账号',
+        weight: '更新权重',
+        'proxy-enable': '启用代理组',
+        'proxy-disable': '禁用代理组',
+        'proxy-delete': '删除代理组',
+      };
+      return labels[action] || action;
+    }
+
+    function escapeSelectorValue(value) {
+      if (window.CSS && typeof window.CSS.escape === 'function') {
+        return window.CSS.escape(value);
+      }
+      return String(value || '').replace(/["\\]/g, '\\$&');
+    }
+
+    function restoreFocus(selector) {
+      requestAnimationFrame(() => {
+        const target = document.querySelector(selector);
+        if (target) target.focus();
+      });
     }
 
     function accountProxyGroupLabel(account) {
@@ -852,12 +1316,12 @@
       const panel = document.getElementById('statusPanel');
       panel.innerHTML = '';
       const items = [
-        ['状态', statusData.status],
+        ['总状态', statusData.status || '-'],
         ['活跃账号', `${statusData.active ?? 0} / ${statusData.accounts ?? 0}`],
         ['活跃池', `${statusData.pool?.warmed_accounts ?? 0} / ${statusData.pool?.target_size ?? 0}`],
-        ['池维护 warm runs', statusData.pool?.warm_runs ?? 0],
-        ['池维护 refresh runs', statusData.pool?.refresh_runs ?? 0],
-        ['池补仓 fetches', statusData.pool?.refill_fetches ?? 0],
+        ['池预热次数', statusData.pool?.warm_runs ?? 0],
+        ['池刷新次数', statusData.pool?.refresh_runs ?? 0],
+        ['池补仓次数', statusData.pool?.refill_fetches ?? 0],
         ['最近池动作', `${statusData.pool?.last_action || '-'} @ ${formatUnixTime(statusData.pool?.last_action_unix)}`],
         ['最近补仓新增', statusData.pool?.last_refill_add ?? 0],
         ['池维护错误', statusData.pool?.last_error || '-'],
@@ -867,7 +1331,7 @@
         ['总重试', statusData.stats?.total_retries ?? 0],
         ['输入 Tokens', statusData.stats?.total_input_tokens ?? 0],
         ['输出 Tokens', statusData.stats?.total_output_tokens ?? 0],
-        ['Credits', (statusData.stats?.total_credits ?? 0).toFixed(4)]
+        ['累计 Credits', (statusData.stats?.total_credits ?? 0).toFixed(4)]
       ];
       items.forEach(([label, value]) => {
         const item = document.createElement('div');
@@ -879,7 +1343,7 @@
         Object.entries(statusData.by_status).forEach(([key, value]) => {
           const item = document.createElement('div');
           item.className = 'kv-item';
-          item.innerHTML = `<span class="muted">status.${key}</span><strong>${value}</strong>`;
+          item.innerHTML = `<span class="muted">状态.${accountStatusLabel(key)}</span><strong>${value}</strong>`;
           panel.appendChild(item);
         });
       }
@@ -936,7 +1400,7 @@
       updateSelectionCounters();
 
       if (!view.length) {
-        body.innerHTML = '<tr><td colspan="9" class="muted">暂无账号</td></tr>';
+        body.innerHTML = '<tr class="table-empty"><td colspan="9" class="muted">暂无账号</td></tr>';
         return;
       }
 
@@ -946,62 +1410,62 @@
           row.classList.add('selected');
         }
         row.innerHTML = `
-          <td><input type="checkbox" data-account-select="${account.id}" ${selectedAccountIds.has(String(account.id || '')) ? 'checked' : ''}></td>
-          <td>
+          <td data-label="选择"><input type="checkbox" aria-label="选择账号 ${account.id || '-'}" data-account-select="${account.id}" ${selectedAccountIds.has(String(account.id || '')) ? 'checked' : ''}></td>
+          <th scope="row" data-label="账号">
             <div class="cell-stack">
               <div class="cell-title">${account.id || '-'}</div>
               <div class="cell-subtitle">${account.source || '-'}</div>
             </div>
-          </td>
-          <td>
+          </th>
+          <td data-label="来源">
             <div class="cell-stack">
               <div class="cell-title">${account.source || '-'}</div>
-              <div class="cell-subtitle">in_pool: ${account.in_pool ? 'yes' : 'no'}</div>
+              <div class="cell-subtitle">池内: ${yesNo(account.in_pool)}</div>
             </div>
           </td>
-          <td>
+          <td data-label="状态">
             <div class="cell-stack">
-              <span class="${badgeClass(account.status)}">${account.status || 'unknown'}</span>
-              <div class="cell-subtitle">disabled: ${account.disabled ? 'yes' : 'no'}</div>
+              <span class="${badgeClass(account.status)}">${accountStatusLabel(account.status)}</span>
+              <div class="cell-subtitle">禁用: ${yesNo(account.disabled)}</div>
             </div>
           </td>
-          <td>
+          <td data-label="代理组">
             <div class="cell-stack">
               <div class="cell-title">${accountProxyGroupLabel(account)}</div>
               <div class="cell-subtitle">${account.proxy_url_masked || account.proxy_url || '-'}</div>
             </div>
           </td>
-          <td>
-            <div class="cell-stack">
+          <td data-label="权重">
+            <div class="weight-editor">
               <div class="cell-title">${account.weight || 100}</div>
               <div class="row-actions">
                 <input type="number" min="1" value="${account.weight || 100}" data-weight-input="${account.id}">
-                <button class="button-warning" data-action="weight" data-id="${account.id}">update</button>
+                <button class="button-warning" data-action="weight" data-id="${account.id}">保存</button>
               </div>
             </div>
           </td>
-          <td>
+          <td data-label="凭证">
             <div class="cell-stack">
-              <div class="cell-subtitle">bearer: ${account.has_bearer ? 'yes' : 'no'}</div>
-              <div class="cell-subtitle">refresh: ${account.has_refresh ? 'yes' : 'no'}</div>
-              <div class="cell-subtitle">expires: ${formatUnixTime(account.expires_at)}</div>
+              <div class="cell-subtitle">Bearer: ${yesNo(account.has_bearer)}</div>
+              <div class="cell-subtitle">Refresh: ${yesNo(account.has_refresh)}</div>
+              <div class="cell-subtitle">过期时间: ${formatUnixTime(account.expires_at)}</div>
             </div>
           </td>
-          <td>
+          <td data-label="时间">
             <div class="cell-stack">
-              <div class="cell-subtitle">used: ${formatUnixTime(account.last_used_at)}</div>
-              <div class="cell-subtitle">refresh: ${formatUnixTime(account.last_refresh_at)}</div>
-              <div class="cell-subtitle">cooldown: ${formatUnixTime(account.cooldown_until)}</div>
-              <div class="cell-subtitle">failures: ${account.failures || 0}</div>
+              <div class="cell-subtitle">最近使用: ${formatUnixTime(account.last_used_at)}</div>
+              <div class="cell-subtitle">最近刷新: ${formatUnixTime(account.last_refresh_at)}</div>
+              <div class="cell-subtitle">冷却至: ${formatUnixTime(account.cooldown_until)}</div>
+              <div class="cell-subtitle">失败次数: ${account.failures || 0}</div>
             </div>
           </td>
-          <td>
+          <td data-label="操作">
             <div class="row-actions">
-              <button class="button-secondary" data-action="refresh" data-id="${account.id}">refresh</button>
-              <button class="button-secondary" data-action="toggle" data-id="${account.id}" data-disabled="${account.disabled}">${account.disabled ? 'enable' : 'disable'}</button>
-              <button class="button-danger" data-action="delete" data-id="${account.id}">delete</button>
+              <button class="button-secondary" data-action="refresh" data-id="${account.id}">刷新凭证</button>
+              <button class="button-secondary" data-action="toggle" data-id="${account.id}" data-disabled="${account.disabled}">${account.disabled ? '启用' : '停用'}</button>
+              <button class="button-danger" data-action="delete" data-id="${account.id}">删除</button>
             </div>
-            ${account.last_error ? `<div class="cell-subtitle" style="margin-top:8px;color:var(--danger);">${account.last_error}</div>` : ''}
+            ${account.last_error ? `<div class="cell-subtitle" style="margin-top:8px;color:var(--danger);">最近错误: ${account.last_error}</div>` : ''}
           </td>
         `;
         body.appendChild(row);
@@ -1023,12 +1487,12 @@
       updateSelectionCounters();
 
       if (!available) {
-        body.innerHTML = '<tr><td colspan="8" class="muted">代理组后端尚未接入</td></tr>';
+        body.innerHTML = '<tr class="table-empty"><td colspan="8" class="muted">代理组后端尚未接入</td></tr>';
         return;
       }
 
       if (!ordered.length) {
-        body.innerHTML = '<tr><td colspan="8" class="muted">暂无代理组</td></tr>';
+        body.innerHTML = '<tr class="table-empty"><td colspan="8" class="muted">暂无代理组</td></tr>';
         return;
       }
 
@@ -1038,38 +1502,38 @@
           row.classList.add('selected');
         }
         row.innerHTML = `
-          <td><input type="checkbox" data-proxy-group-select="${group.id}" ${selectedProxyGroupIds.has(String(group.id || '')) ? 'checked' : ''}></td>
-          <td>
+          <td data-label="选择"><input type="checkbox" aria-label="选择代理组 ${group.name || group.id || '-'}" data-proxy-group-select="${group.id}" ${selectedProxyGroupIds.has(String(group.id || '')) ? 'checked' : ''}></td>
+          <th scope="row" data-label="代理组">
             <div class="cell-stack">
               <div class="cell-title">${group.name || group.id || '-'}</div>
               <div class="cell-subtitle">${group.id || '-'}</div>
             </div>
-          </td>
-          <td>
+          </th>
+          <td data-label="代理 URL">
             <div class="cell-stack">
               <div class="cell-title">${group.proxy_url_masked || group.proxy_url || '-'}</div>
             </div>
           </td>
-          <td>
-            <span class="${badgeClass(proxyGroupBadge(group))}">${group.enabled ? 'enabled' : 'disabled'}</span>
+          <td data-label="状态">
+            <span class="${badgeClass(proxyGroupBadge(group))}">${group.enabled ? '启用' : '禁用'}</span>
           </td>
-          <td>${group.bound_account_count ?? group.account_count ?? 0}</td>
-          <td>
+          <td data-label="账号数">${group.bound_account_count ?? group.account_count ?? 0}</td>
+          <td data-label="备注">
             <div class="cell-stack">
               <div class="cell-subtitle">${group.notes || '-'}</div>
             </div>
           </td>
-          <td>
+          <td data-label="时间">
             <div class="cell-stack">
-              <div class="cell-subtitle">created: ${formatUnixTime(group.created_at)}</div>
-              <div class="cell-subtitle">updated: ${formatUnixTime(group.updated_at)}</div>
+              <div class="cell-subtitle">创建: ${formatUnixTime(group.created_at)}</div>
+              <div class="cell-subtitle">更新: ${formatUnixTime(group.updated_at)}</div>
             </div>
           </td>
-          <td>
+          <td data-label="操作">
             <div class="row-actions">
-              <button class="button-secondary" data-action="proxy-enable" data-id="${group.id}">enable</button>
-              <button class="button-secondary" data-action="proxy-disable" data-id="${group.id}">disable</button>
-              <button class="button-danger" data-action="proxy-delete" data-id="${group.id}">delete</button>
+              <button class="button-secondary" data-action="proxy-enable" data-id="${group.id}">启用</button>
+              <button class="button-secondary" data-action="proxy-disable" data-id="${group.id}">禁用</button>
+              <button class="button-danger" data-action="proxy-delete" data-id="${group.id}">删除</button>
             </div>
           </td>
         `;
@@ -1085,9 +1549,9 @@
 
       const meta = payload.snapshot || {};
       const items = [
-        ['last_refresh_unix', `${formatUnixTime(meta.last_refresh_unix)} (${formatRelativeTime(meta.last_refresh_unix)})`],
-        ['last_error', meta.last_error || '-'],
-        ['cached_models', meta.models?.length || 0]
+        ['上次刷新', `${formatUnixTime(meta.last_refresh_unix)} (${formatRelativeTime(meta.last_refresh_unix)})`],
+        ['最近错误', meta.last_error || '-'],
+        ['缓存模型数', meta.models?.length || 0]
       ];
       items.forEach(([label, value]) => {
         const row = document.createElement('div');
@@ -1095,6 +1559,11 @@
         row.innerHTML = `<span class="muted">${label}</span><strong>${value}</strong>`;
         snapshot.appendChild(row);
       });
+
+      if (!(payload.models || []).length) {
+        list.innerHTML = '<div class="model-item muted">当前没有可展示的模型目录。</div>';
+        return;
+      }
 
       (payload.models || []).forEach((model) => {
         const item = document.createElement('article');
@@ -1104,7 +1573,7 @@
           <div class="meta-row">
             <span class="badge">${model.Source || model.source}</span>
             <span class="badge">${model.InternalName || model.internal_name || '-'}</span>
-            <span class="badge">${(model.Verified ?? model.verified) ? 'verified' : 'passthrough'}</span>
+            <span class="badge">${(model.Verified ?? model.verified) ? '已验证' : '透传'}</span>
           </div>
         `;
         list.appendChild(item);
@@ -1127,23 +1596,23 @@
             <div>
               <div style="font-weight:700;">${entry.endpoint}</div>
               <div class="meta-row">
-                <span class="badge ${entry.success ? 'active' : 'disabled'}">${entry.success ? 'success' : 'failure'}</span>
+                <span class="badge ${entry.success ? 'active' : 'disabled'}">${entry.success ? '成功' : '失败'}</span>
                 <span>${entry.protocol}</span>
                 <span>${entry.model}</span>
-                <span>account ${entry.account_id || '-'}</span>
+                <span>账号 ${entry.account_id || '-'}</span>
               </div>
             </div>
             <div class="inline-mono muted">${formatUnixTime(entry.time)}</div>
           </div>
           <div class="meta-row">
-            <span>attempts ${entry.attempts || 1}</span>
-            <span>status ${entry.status_code || '-'}</span>
-            <span>tokens ${entry.total_tokens || 0}</span>
-            <span>credits ${(entry.credits || 0).toFixed(4)}</span>
+            <span>尝试次数 ${entry.attempts || 1}</span>
+            <span>状态码 ${entry.status_code || '-'}</span>
+            <span>Tokens ${entry.total_tokens || 0}</span>
+            <span>Credits ${(entry.credits || 0).toFixed(4)}</span>
             <span>${formatRelativeTime(entry.time)} 前</span>
           </div>
-          ${entry.failure_reason ? `<div class="meta-row"><span>reason ${entry.failure_reason}</span></div>` : ''}
-          ${entry.body_signal ? `<div class="meta-row"><span>body_signal ${entry.body_signal}</span></div>` : ''}
+          ${entry.failure_reason ? `<div class="meta-row"><span>失败原因 ${entry.failure_reason}</span></div>` : ''}
+          ${entry.body_signal ? `<div class="meta-row"><span>Body Signal ${entry.body_signal}</span></div>` : ''}
           ${entry.error ? `<div class="message error" style="margin-top:10px;">${entry.error}</div>` : ''}
         `;
         list.appendChild(item);
@@ -1152,7 +1621,7 @@
 
     async function loadVersion() {
       const data = await api('/admin/api/version');
-      document.getElementById('versionPill').textContent = `version: ${data.version || '-'}`;
+      document.getElementById('versionPill').textContent = `版本: ${data.version || '-'}`;
     }
 
     async function loadConfig() {
@@ -1185,8 +1654,8 @@
     async function loadModels() {
       const data = await api('/admin/api/models');
       renderModels(data);
-      const source = data.snapshot?.models?.length ? 'runtime' : 'fallback';
-      document.getElementById('modePill').textContent = `catalog: ${source}`;
+      const source = data.snapshot?.models?.length ? '运行态' : '回退目录';
+      document.getElementById('modePill').textContent = `目录: ${source}`;
     }
 
     async function loadLogs() {
@@ -1230,6 +1699,7 @@
       if (!button) return;
       const id = button.dataset.id;
       const action = button.dataset.action;
+      const actionText = actionLabel(action);
       try {
         await withBusy(async () => {
           if (action === 'refresh') {
@@ -1253,8 +1723,8 @@
           } else if (action === 'proxy-delete') {
             await api(`/admin/api/proxy-groups/${id}`, { method: 'DELETE' });
           }
-        }, `正在执行 ${action}...`);
-        showMessage(globalMessage, `操作成功: ${action} ${id}`, 'success');
+        }, `正在执行 ${actionText}...`);
+        showMessage(globalMessage, `操作成功: ${actionText} ${id}`, 'success');
         await Promise.all([loadAccounts(), loadProxyGroups(), loadStatus(), loadLogs(), loadExport()]);
       } catch (error) {
         showMessage(globalMessage, error.message, 'error');
@@ -1272,6 +1742,7 @@
         selectedAccountIds.delete(id);
       }
       renderAccounts(currentAccounts);
+      restoreFocus(`input[data-account-select="${escapeSelectorValue(id)}"]`);
     }
 
     function handleProxyGroupSelectionChange(event) {
@@ -1285,6 +1756,7 @@
         selectedProxyGroupIds.delete(id);
       }
       renderProxyGroups(currentProxyGroups, true);
+      restoreFocus(`input[data-proxy-group-select="${escapeSelectorValue(id)}"]`);
     }
 
     function normalizeAccountImportEntry(item, index) {
@@ -1590,7 +2062,10 @@
       }
     }
 
-    document.getElementById('loginButton').addEventListener('click', login);
+    document.getElementById('loginForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      login();
+    });
     document.getElementById('logoutButton').addEventListener('click', () => {
       clearToken();
       appView.classList.add('hidden');
@@ -1610,17 +2085,31 @@
       selectedAccountIds.clear();
       renderAccounts(currentAccounts);
     });
-    document.getElementById('applyAccountViewButton').addEventListener('click', () => renderAccounts(currentAccounts));
+    document.getElementById('accountFilterForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      renderAccounts(currentAccounts);
+    });
     document.getElementById('reloadModelViewButton').addEventListener('click', () => withBusy(loadModels, '正在加载模型目录...').catch((error) => showMessage(globalMessage, error.message, 'error')));
     document.getElementById('reloadConfigButton').addEventListener('click', () => withBusy(loadConfig, '正在加载配置...').catch((error) => showMessage(globalMessage, error.message, 'error')));
     document.getElementById('reloadDoctorButton').addEventListener('click', () => withBusy(loadDoctor, '正在执行诊断...').catch((error) => showMessage(globalMessage, error.message, 'error')));
     document.getElementById('reloadExportButton').addEventListener('click', () => withBusy(loadExport, '正在加载导出数据...').catch((error) => showMessage(globalMessage, error.message, 'error')));
-    document.getElementById('applyLogsFilterButton').addEventListener('click', () => withBusy(loadLogs, '正在加载日志...').catch((error) => showMessage(globalMessage, error.message, 'error')));
-    document.getElementById('bulkImportButton').addEventListener('click', submitBulkImport);
-    document.getElementById('proxyGroupImportButton').addEventListener('click', submitProxyGroupImport);
-    document.getElementById('matchButton').addEventListener('click', submitProxyGroupAssign);
+    document.getElementById('logsFilterForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      withBusy(loadLogs, '正在加载日志...').catch((error) => showMessage(globalMessage, error.message, 'error'));
+    });
+    document.getElementById('bulkImportForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      submitBulkImport();
+    });
+    document.getElementById('proxyGroupImportForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      submitProxyGroupImport();
+    });
+    document.getElementById('matchForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      submitProxyGroupAssign();
+    });
     document.getElementById('reloadProxyGroupsButton').addEventListener('click', () => withBusy(loadProxyGroups, '正在刷新代理组...').catch((error) => showMessage(globalMessage, error.message, 'error')));
-    document.getElementById('reloadProxyGroupsButtonTop').addEventListener('click', () => withBusy(loadProxyGroups, '正在刷新代理组...').catch((error) => showMessage(globalMessage, error.message, 'error')));
     document.getElementById('selectVisibleProxyGroupsButton').addEventListener('click', () => {
       visibleProxyGroups.forEach((group) => selectedProxyGroupIds.add(String(group.id || '')));
       renderProxyGroups(currentProxyGroups, true);
