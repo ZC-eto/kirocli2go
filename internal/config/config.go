@@ -41,6 +41,7 @@ type AccountsConfig struct {
 	OIDCURL        string
 	RefreshTimeout time.Duration
 	StatePath      string
+	ProxyStatePath string
 }
 
 type BackgroundConfig struct {
@@ -104,6 +105,7 @@ func FromEnv() Config {
 			OIDCURL:        envOrDefault("KIROCLI_GO_OIDC_URL", "https://oidc.us-east-1.amazonaws.com/token"),
 			RefreshTimeout: durationEnv("KIROCLI_GO_REFRESH_TIMEOUT_SEC", 30*time.Second),
 			StatePath:      envOrDefault("KIROCLI_GO_ACCOUNT_STATE_PATH", "data/accounts_state.json"),
+			ProxyStatePath: envOrDefault("KIROCLI_GO_PROXY_STATE_PATH", "data/proxy_state.json"),
 		},
 		Background: BackgroundConfig{
 			ModelRefreshEnabled:      boolEnv("KIROCLI_GO_MODEL_REFRESH_ENABLED", true),

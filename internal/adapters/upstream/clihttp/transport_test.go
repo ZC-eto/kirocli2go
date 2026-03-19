@@ -84,3 +84,13 @@ func TestBuildPayloadAppliesThinkingAndTranslatorRules(t *testing.T) {
 		t.Fatalf("expected long tool description placeholder, got %q", spec["description"])
 	}
 }
+
+func TestNormalizeProxyURLAddsHTTPWhenMissingScheme(t *testing.T) {
+	normalized, err := NormalizeProxyURL("demo:secret@74.81.81.81:10000")
+	if err != nil {
+		t.Fatalf("NormalizeProxyURL error: %v", err)
+	}
+	if normalized != "http://demo:secret@74.81.81.81:10000" {
+		t.Fatalf("unexpected normalized proxy url: %s", normalized)
+	}
+}

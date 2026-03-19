@@ -290,6 +290,98 @@
       gap: 12px;
     }
 
+    .table-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid rgba(17, 50, 43, 0.08);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.72);
+    }
+
+    .account-table,
+    .proxy-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1120px;
+    }
+
+    .account-table th,
+    .account-table td,
+    .proxy-table th,
+    .proxy-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(17, 50, 43, 0.08);
+      vertical-align: top;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .account-table thead th,
+    .proxy-table thead th {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: rgba(15, 118, 110, 0.04);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .account-table tr.selected,
+    .proxy-table tr.selected {
+      background: rgba(15, 118, 110, 0.05);
+    }
+
+    .cell-stack {
+      display: grid;
+      gap: 4px;
+    }
+
+    .cell-title {
+      font-weight: 700;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .cell-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .row-actions button {
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+
+    .mini-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .proxy-group-list {
+      display: grid;
+      gap: 12px;
+    }
+
     .kv {
       display: grid;
       gap: 8px;
@@ -429,6 +521,8 @@
           <div class="card-header">
             <h2 class="card-title">账号池</h2>
             <div class="actions">
+              <button id="selectVisibleAccountsButton" class="button-secondary">选择筛选结果</button>
+              <button id="clearAccountSelectionButton" class="button-secondary">清空选择</button>
               <button id="reloadAccountsButton" class="button-secondary">刷新账号列表</button>
             </div>
           </div>
@@ -445,6 +539,9 @@
               <option value="disabled">disabled</option>
               <option value="banned">banned</option>
             </select>
+            <select id="accountFilterProxyGroup">
+              <option value="">全部代理组</option>
+            </select>
             <select id="accountSortBy">
               <option value="pool_first">池内优先</option>
               <option value="failures_desc">失败次数降序</option>
@@ -454,24 +551,101 @@
             </select>
             <button id="applyAccountViewButton" class="button-secondary">应用视图</button>
           </div>
-          <div class="split">
-            <div>
-              <div id="accountList" class="account-list"></div>
+          <div class="table-toolbar">
+            <div class="toolbar-note">已选账号可直接参与代理组批量匹配；未选择时会使用当前筛选结果。</div>
+            <div class="toolbar-note">已选 <span id="selectedAccountCount">0</span> / <span id="visibleAccountCount">0</span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="account-table">
+              <thead>
+                <tr>
+                  <th style="width:44px;">选</th>
+                  <th>账号</th>
+                  <th>来源</th>
+                  <th>状态</th>
+                  <th>代理组</th>
+                  <th>权重</th>
+                  <th>凭证</th>
+                  <th>时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="accountTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">批量导入账号</h2>
+            <div class="actions">
+              <button id="bulkImportButton" class="button-primary">批量导入账号</button>
             </div>
-            <div class="card" style="padding:16px;">
-              <div class="card-header" style="margin-bottom:12px;">
-                <h3 class="card-title" style="font-size:16px;">导入账号</h3>
-              </div>
-              <div class="form-grid">
-                <input id="importId" placeholder="自定义 ID，可留空">
-                <input id="importWeight" type="number" min="1" placeholder="权重，默认 100">
-                <textarea id="importBearer" placeholder="bearer_token，可留空"></textarea>
-                <textarea id="importRefresh" placeholder="refresh_token，可留空"></textarea>
-                <input id="importClientId" placeholder="client_id，可留空">
-                <input id="importClientSecret" placeholder="client_secret，可留空">
-                <button id="importButton" class="button-primary">导入</button>
-              </div>
+          </div>
+          <div class="form-grid">
+            <textarea id="bulkAccountsInput" placeholder="粘贴 JSON 数组、每行 JSON，或原始账号文件内容。支持 clientId/clientSecret/refreshToken/email 等字段。"></textarea>
+            <input id="bulkAccountsDefaultGroup" placeholder="默认代理组 ID，可留空">
+            <input id="bulkAccountsWeight" type="number" min="1" placeholder="默认权重，留空则使用输入值">
+          </div>
+          <div class="mini-note" style="margin-top:10px;">若条目里没有 `id`，系统会优先使用 `email`、`clientId` 或自动生成 ID。</div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">代理组导入</h2>
+            <div class="actions">
+              <button id="selectVisibleProxyGroupsButton" class="button-secondary">选择可见项</button>
+              <button id="clearProxyGroupSelectionButton" class="button-secondary">清空选择</button>
+              <button id="reloadProxyGroupsButton" class="button-secondary">刷新代理组</button>
             </div>
+          </div>
+          <div class="form-grid">
+            <textarea id="proxyGroupsInput" placeholder="每行一个代理 URL，或 JSON 内容。支持裸格式 login:password@host:port、name|proxy_url、id|name|proxy_url，以及 {id,name,proxy_url,notes,enabled}。"></textarea>
+            <input id="proxyGroupNamePrefix" value="proxy" placeholder="名称前缀">
+            <button id="proxyGroupImportButton" class="button-primary">导入代理组</button>
+          </div>
+          <div class="mini-note" style="margin-top:10px;">每个代理组只绑定一条代理 URL，一个代理组可以绑定多个账号。</div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">代理组列表</h2>
+            <div class="actions">
+              <button id="reloadProxyGroupsButtonTop" class="button-secondary">刷新代理组</button>
+            </div>
+          </div>
+          <div class="table-toolbar">
+            <div class="toolbar-note">支持启用、禁用、删除和参与账号分配。</div>
+            <div class="toolbar-note">已选 <span id="selectedProxyGroupCount">0</span> / <span id="visibleProxyGroupCount">0</span></div>
+          </div>
+          <div class="table-wrap">
+            <table class="proxy-table">
+              <thead>
+                <tr>
+                  <th style="width:44px;">选</th>
+                  <th>代理组</th>
+                  <th>代理 URL</th>
+                  <th>状态</th>
+                  <th>账号数</th>
+                  <th>备注</th>
+                  <th>时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="proxyGroupTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">账号与代理分配</h2>
+          </div>
+          <div class="form-grid">
+            <input id="accountsPerProxy" type="number" min="1" value="5" placeholder="每个代理分配账号数">
+            <textarea id="matchAccountIds" placeholder="可选：账号 ID，每行一个。留空则使用当前选中的账号；如果也为空，则使用当前筛选结果。"></textarea>
+            <textarea id="matchProxyGroupIds" placeholder="可选：代理组 ID，每行一个。留空则使用当前选中的代理组；如果也为空，则使用当前代理组列表。"></textarea>
+            <button id="matchButton" class="button-primary">按顺序匹配账号到代理组</button>
           </div>
         </section>
 
@@ -559,6 +733,11 @@
     const globalMessage = document.getElementById('globalMessage');
     const loginMessage = document.getElementById('loginMessage');
     let currentAccounts = [];
+    let currentProxyGroups = [];
+    let visibleAccounts = [];
+    let visibleProxyGroups = [];
+    let selectedAccountIds = new Set();
+    let selectedProxyGroupIds = new Set();
     let busyCounter = 0;
 
     function getToken() {
@@ -630,6 +809,40 @@
       return `${Math.floor(abs / 86400)}d`;
     }
 
+    function accountProxyGroupLabel(account) {
+      return account.proxy_group_name || account.proxy_group_id || '-';
+    }
+
+    function proxyGroupBadge(group) {
+      return group.enabled ? 'active' : 'disabled';
+    }
+
+    function updateSelectionCounters() {
+      const accountCount = document.getElementById('selectedAccountCount');
+      const proxyCount = document.getElementById('selectedProxyGroupCount');
+      if (accountCount) accountCount.textContent = String(selectedAccountIds.size);
+      if (proxyCount) proxyCount.textContent = String(selectedProxyGroupIds.size);
+      const visibleAccountCount = document.getElementById('visibleAccountCount');
+      const visibleProxyCount = document.getElementById('visibleProxyGroupCount');
+      if (visibleAccountCount) visibleAccountCount.textContent = String(visibleAccounts.length);
+      if (visibleProxyCount) visibleProxyCount.textContent = String(visibleProxyGroups.length);
+    }
+
+    function syncProxyGroupFilterOptions() {
+      const select = document.getElementById('accountFilterProxyGroup');
+      const current = select.value;
+      select.innerHTML = '<option value="">全部代理组</option>';
+      currentProxyGroups.forEach((group) => {
+        const option = document.createElement('option');
+        option.value = group.id || '';
+        option.textContent = group.name ? `${group.name} (${group.id || '-'})` : (group.id || '-');
+        select.appendChild(option);
+      });
+      if (currentProxyGroups.some((group) => group.id === current)) {
+        select.value = current;
+      }
+    }
+
     function renderStatus(statusData) {
       document.getElementById('statAccounts').textContent = statusData.accounts ?? 0;
       document.getElementById('statActive').textContent = statusData.active ?? 0;
@@ -677,11 +890,12 @@
     }
 
     function renderAccounts(accounts) {
-      const list = document.getElementById('accountList');
-      list.innerHTML = '';
+      const body = document.getElementById('accountTableBody');
+      body.innerHTML = '';
       currentAccounts = Array.isArray(accounts) ? accounts.slice() : [];
       const poolFilter = document.getElementById('accountFilterPool').value;
       const statusFilter = document.getElementById('accountFilterStatus').value;
+      const proxyGroupFilter = document.getElementById('accountFilterProxyGroup').value;
       const sortBy = document.getElementById('accountSortBy').value;
 
       let view = currentAccounts.slice();
@@ -692,6 +906,9 @@
       }
       if (statusFilter) {
         view = view.filter((account) => account.status === statusFilter);
+      }
+      if (proxyGroupFilter) {
+        view = view.filter((account) => String(account.proxy_group_id || '') === proxyGroupFilter);
       }
 
       const compareNumberDesc = (a, b, field) => Number(b[field] || 0) - Number(a[field] || 0);
@@ -715,49 +932,148 @@
           });
       }
 
+      visibleAccounts = view.slice();
+      updateSelectionCounters();
+
       if (!view.length) {
-        list.innerHTML = '<div class="account-item muted">暂无账号</div>';
+        body.innerHTML = '<tr><td colspan="9" class="muted">暂无账号</td></tr>';
         return;
       }
 
       view.forEach((account) => {
-        const item = document.createElement('article');
-        item.className = 'account-item';
-        item.innerHTML = `
-          <div class="account-top">
-            <div>
-              <div style="font-weight:700;font-size:16px;">${account.id}</div>
-              <div class="meta-row">
-                <span class="${badgeClass(account.status)}">${account.status}</span>
-                <span class="badge">${account.source}</span>
-                <span class="badge">weight ${account.weight}</span>
+        const row = document.createElement('tr');
+        if (selectedAccountIds.has(String(account.id || ''))) {
+          row.classList.add('selected');
+        }
+        row.innerHTML = `
+          <td><input type="checkbox" data-account-select="${account.id}" ${selectedAccountIds.has(String(account.id || '')) ? 'checked' : ''}></td>
+          <td>
+            <div class="cell-stack">
+              <div class="cell-title">${account.id || '-'}</div>
+              <div class="cell-subtitle">${account.source || '-'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="cell-stack">
+              <div class="cell-title">${account.source || '-'}</div>
+              <div class="cell-subtitle">in_pool: ${account.in_pool ? 'yes' : 'no'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="cell-stack">
+              <span class="${badgeClass(account.status)}">${account.status || 'unknown'}</span>
+              <div class="cell-subtitle">disabled: ${account.disabled ? 'yes' : 'no'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="cell-stack">
+              <div class="cell-title">${accountProxyGroupLabel(account)}</div>
+              <div class="cell-subtitle">${account.proxy_url_masked || account.proxy_url || '-'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="cell-stack">
+              <div class="cell-title">${account.weight || 100}</div>
+              <div class="row-actions">
+                <input type="number" min="1" value="${account.weight || 100}" data-weight-input="${account.id}">
+                <button class="button-warning" data-action="weight" data-id="${account.id}">update</button>
               </div>
             </div>
-            <div class="actions">
+          </td>
+          <td>
+            <div class="cell-stack">
+              <div class="cell-subtitle">bearer: ${account.has_bearer ? 'yes' : 'no'}</div>
+              <div class="cell-subtitle">refresh: ${account.has_refresh ? 'yes' : 'no'}</div>
+              <div class="cell-subtitle">expires: ${formatUnixTime(account.expires_at)}</div>
+            </div>
+          </td>
+          <td>
+            <div class="cell-stack">
+              <div class="cell-subtitle">used: ${formatUnixTime(account.last_used_at)}</div>
+              <div class="cell-subtitle">refresh: ${formatUnixTime(account.last_refresh_at)}</div>
+              <div class="cell-subtitle">cooldown: ${formatUnixTime(account.cooldown_until)}</div>
+              <div class="cell-subtitle">failures: ${account.failures || 0}</div>
+            </div>
+          </td>
+          <td>
+            <div class="row-actions">
               <button class="button-secondary" data-action="refresh" data-id="${account.id}">refresh</button>
               <button class="button-secondary" data-action="toggle" data-id="${account.id}" data-disabled="${account.disabled}">${account.disabled ? 'enable' : 'disable'}</button>
               <button class="button-danger" data-action="delete" data-id="${account.id}">delete</button>
             </div>
-          </div>
-          <div class="meta-row">
-            <span>bearer: ${account.has_bearer}</span>
-            <span>refresh: ${account.has_refresh}</span>
-            <span>expires_at: ${formatUnixTime(account.expires_at)}</span>
-            <span>cooldown_until: ${formatUnixTime(account.cooldown_until)}</span>
-          </div>
-          <div class="meta-row" style="margin-top:8px;">
-            <span>last_used_at: ${formatUnixTime(account.last_used_at)} (${formatRelativeTime(account.last_used_at)})</span>
-            <span>last_refresh_at: ${formatUnixTime(account.last_refresh_at)}</span>
-            <span>failures: ${account.failures || 0}</span>
-            <span>in_pool: ${account.in_pool ? 'yes' : 'no'}</span>
-          </div>
-          <div class="meta-row" style="margin-top:8px;">
-            <input type="number" min="1" value="${account.weight || 100}" data-weight-input="${account.id}">
-            <button class="button-warning" data-action="weight" data-id="${account.id}">update weight</button>
-          </div>
-          ${account.last_error ? `<div class="message error" style="margin-top:10px;">${account.last_error}</div>` : ''}
+            ${account.last_error ? `<div class="cell-subtitle" style="margin-top:8px;color:var(--danger);">${account.last_error}</div>` : ''}
+          </td>
         `;
-        list.appendChild(item);
+        body.appendChild(row);
+      });
+    }
+
+    function renderProxyGroups(groups, available = true) {
+      const body = document.getElementById('proxyGroupTableBody');
+      body.innerHTML = '';
+      currentProxyGroups = Array.isArray(groups) ? groups.slice() : [];
+      syncProxyGroupFilterOptions();
+
+      const ordered = currentProxyGroups.slice().sort((a, b) => {
+        const left = String(a.name || a.id || '').toLowerCase();
+        const right = String(b.name || b.id || '').toLowerCase();
+        return left.localeCompare(right);
+      });
+      visibleProxyGroups = ordered.slice();
+      updateSelectionCounters();
+
+      if (!available) {
+        body.innerHTML = '<tr><td colspan="8" class="muted">代理组后端尚未接入</td></tr>';
+        return;
+      }
+
+      if (!ordered.length) {
+        body.innerHTML = '<tr><td colspan="8" class="muted">暂无代理组</td></tr>';
+        return;
+      }
+
+      ordered.forEach((group) => {
+        const row = document.createElement('tr');
+        if (selectedProxyGroupIds.has(String(group.id || ''))) {
+          row.classList.add('selected');
+        }
+        row.innerHTML = `
+          <td><input type="checkbox" data-proxy-group-select="${group.id}" ${selectedProxyGroupIds.has(String(group.id || '')) ? 'checked' : ''}></td>
+          <td>
+            <div class="cell-stack">
+              <div class="cell-title">${group.name || group.id || '-'}</div>
+              <div class="cell-subtitle">${group.id || '-'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="cell-stack">
+              <div class="cell-title">${group.proxy_url_masked || group.proxy_url || '-'}</div>
+            </div>
+          </td>
+          <td>
+            <span class="${badgeClass(proxyGroupBadge(group))}">${group.enabled ? 'enabled' : 'disabled'}</span>
+          </td>
+          <td>${group.bound_account_count ?? group.account_count ?? 0}</td>
+          <td>
+            <div class="cell-stack">
+              <div class="cell-subtitle">${group.notes || '-'}</div>
+            </div>
+          </td>
+          <td>
+            <div class="cell-stack">
+              <div class="cell-subtitle">created: ${formatUnixTime(group.created_at)}</div>
+              <div class="cell-subtitle">updated: ${formatUnixTime(group.updated_at)}</div>
+            </div>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button class="button-secondary" data-action="proxy-enable" data-id="${group.id}">enable</button>
+              <button class="button-secondary" data-action="proxy-disable" data-id="${group.id}">disable</button>
+              <button class="button-danger" data-action="proxy-delete" data-id="${group.id}">delete</button>
+            </div>
+          </td>
+        `;
+        body.appendChild(row);
       });
     }
 
@@ -854,6 +1170,18 @@
       renderAccounts(data.accounts || []);
     }
 
+    async function loadProxyGroups() {
+      try {
+        const data = await api('/admin/api/proxy-groups');
+        renderProxyGroups(data.groups || [], data.available !== false);
+      } catch (error) {
+        currentProxyGroups = [];
+        visibleProxyGroups = [];
+        renderProxyGroups([], false);
+        showMessage(globalMessage, error.message || '代理组后端尚未接入', 'error');
+      }
+    }
+
     async function loadModels() {
       const data = await api('/admin/api/models');
       renderModels(data);
@@ -884,7 +1212,7 @@
     async function refreshAll() {
       await withBusy(async () => {
         hideMessage(globalMessage);
-        await Promise.all([loadVersion(), loadConfig(), loadDoctor(), loadStatus(), loadAccounts(), loadModels(), loadLogs(), loadExport()]);
+        await Promise.all([loadVersion(), loadConfig(), loadDoctor(), loadStatus(), loadAccounts(), loadProxyGroups(), loadModels(), loadLogs(), loadExport()]);
       }, '正在刷新控制台...');
     }
 
@@ -918,10 +1246,257 @@
               method: 'POST',
               body: JSON.stringify({ weight })
             });
+          } else if (action === 'proxy-enable') {
+            await api(`/admin/api/proxy-groups/${id}/enable`, { method: 'POST' });
+          } else if (action === 'proxy-disable') {
+            await api(`/admin/api/proxy-groups/${id}/disable`, { method: 'POST' });
+          } else if (action === 'proxy-delete') {
+            await api(`/admin/api/proxy-groups/${id}`, { method: 'DELETE' });
           }
         }, `正在执行 ${action}...`);
         showMessage(globalMessage, `操作成功: ${action} ${id}`, 'success');
-        await Promise.all([loadAccounts(), loadStatus(), loadLogs(), loadExport()]);
+        await Promise.all([loadAccounts(), loadProxyGroups(), loadStatus(), loadLogs(), loadExport()]);
+      } catch (error) {
+        showMessage(globalMessage, error.message, 'error');
+      }
+    }
+
+    function handleAccountSelectionChange(event) {
+      const checkbox = event.target.closest('input[data-account-select]');
+      if (!checkbox) return;
+      const id = String(checkbox.dataset.accountSelect || '');
+      if (!id) return;
+      if (checkbox.checked) {
+        selectedAccountIds.add(id);
+      } else {
+        selectedAccountIds.delete(id);
+      }
+      renderAccounts(currentAccounts);
+    }
+
+    function handleProxyGroupSelectionChange(event) {
+      const checkbox = event.target.closest('input[data-proxy-group-select]');
+      if (!checkbox) return;
+      const id = String(checkbox.dataset.proxyGroupSelect || '');
+      if (!id) return;
+      if (checkbox.checked) {
+        selectedProxyGroupIds.add(id);
+      } else {
+        selectedProxyGroupIds.delete(id);
+      }
+      renderProxyGroups(currentProxyGroups, true);
+    }
+
+    function normalizeAccountImportEntry(item, index) {
+      const raw = item && typeof item === 'object' ? item : {};
+      const normalizedId = String(raw.id || raw.email || raw.clientId || raw.client_id || raw.name || '').trim();
+      return {
+        id: normalizedId,
+        weight: Number(raw.weight || raw.account_weight || document.getElementById('bulkAccountsWeight').value || 100),
+        bearer_token: String(raw.bearer_token || raw.bearerToken || '').trim(),
+        refresh_token: String(raw.refresh_token || raw.refreshToken || '').trim(),
+        client_id: String(raw.client_id || raw.clientId || '').trim(),
+        client_secret: String(raw.client_secret || raw.clientSecret || '').trim(),
+        proxy_group_id: String(raw.proxy_group_id || raw.proxyGroupId || document.getElementById('bulkAccountsDefaultGroup').value || '').trim(),
+        source_index: index,
+      };
+    }
+
+    function parseBulkAccountInput(rawText) {
+      const text = String(rawText || '').trim();
+      if (!text) {
+        return [];
+      }
+
+      const tryParseLines = () => text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item, index) => normalizeAccountImportEntry(item, index));
+        }
+        if (parsed && typeof parsed === 'object') {
+          const list = parsed.accounts || parsed.items || parsed.data || [];
+          if (Array.isArray(list)) {
+            return list.map((item, index) => normalizeAccountImportEntry(item, index));
+          }
+        }
+      } catch (_) {
+        // fall through to line-based parsing
+      }
+
+      const lines = tryParseLines();
+      const items = [];
+      lines.forEach((line, index) => {
+        try {
+          const parsed = JSON.parse(line);
+          items.push(normalizeAccountImportEntry(parsed, index));
+        } catch (_) {
+          const [left, right] = line.split(/\s*[|,]\s*/);
+          if (right) {
+            items.push(normalizeAccountImportEntry({
+              clientId: left,
+              refreshToken: right,
+            }, index));
+            return;
+          }
+          items.push(normalizeAccountImportEntry({
+            refreshToken: line,
+          }, index));
+        }
+      });
+      return items;
+    }
+
+    function normalizeProxyGroupImportEntry(item, index) {
+      if (typeof item === 'string') {
+        const line = item.trim();
+        if (!line) return null;
+        const [left, right] = line.split(/\s*[|,]\s*/);
+        const proxyUrl = right || left;
+        const name = right ? left : '';
+        return {
+          id: '',
+          name,
+          proxy_url: proxyUrl,
+          notes: '',
+        };
+      }
+
+      const raw = item && typeof item === 'object' ? item : {};
+      const name = String(raw.name || '').trim();
+      return {
+        id: String(raw.id || raw.proxy_group_id || raw.proxyGroupId || '').trim(),
+        name,
+        proxy_url: String(raw.proxy_url || raw.proxyUrl || raw.url || '').trim(),
+        notes: String(raw.notes || raw.note || '').trim(),
+        enabled: raw.enabled,
+      };
+    }
+
+    function parseProxyGroupInput(rawText) {
+      const text = String(rawText || '').trim();
+      if (!text) {
+        return [];
+      }
+
+      try {
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item, index) => normalizeProxyGroupImportEntry(item, index)).filter(Boolean);
+        }
+        if (parsed && typeof parsed === 'object') {
+          const list = parsed.groups || parsed.items || parsed.data || [];
+          if (Array.isArray(list)) {
+            return list.map((item, index) => normalizeProxyGroupImportEntry(item, index)).filter(Boolean);
+          }
+        }
+      } catch (_) {
+        // fall through to line-based parsing
+      }
+
+      return text.split(/\r?\n/).map((line, index) => normalizeProxyGroupImportEntry(line, index)).filter(Boolean);
+    }
+
+    function normalizeIdsFromText(text) {
+      return String(text || '')
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+    }
+
+    function collectSelectedOrVisibleIds(selectedSet, visibleList, field = 'id') {
+      const selected = Array.from(selectedSet);
+      if (selected.length > 0) {
+        return selected;
+      }
+      return (visibleList || []).map((item) => String(item[field] || '')).filter(Boolean);
+    }
+
+    async function submitBulkImport() {
+      const items = parseBulkAccountInput(document.getElementById('bulkAccountsInput').value);
+      if (!items.length) {
+        showMessage(globalMessage, '请输入要批量导入的账号内容', 'error');
+        return;
+      }
+      const content = JSON.stringify(items);
+
+      try {
+        let result;
+        await withBusy(async () => {
+          result = await api('/admin/api/accounts/import/bulk', {
+            method: 'POST',
+            body: JSON.stringify({ content })
+          });
+        }, '正在批量导入账号...');
+        const summary = result?.message || `批量导入完成：成功 ${Number(result?.imported || 0)}，失败 ${Number(result?.failed || 0)}`;
+        showMessage(globalMessage, summary, result?.success === false && !result?.partial ? 'error' : 'success');
+        document.getElementById('bulkAccountsInput').value = '';
+        await Promise.all([loadAccounts(), loadStatus(), loadExport()]);
+      } catch (error) {
+        showMessage(globalMessage, error.message, 'error');
+      }
+    }
+
+    async function submitProxyGroupImport() {
+      const items = parseProxyGroupInput(document.getElementById('proxyGroupsInput').value);
+      if (!items.length) {
+        showMessage(globalMessage, '请输入要导入的代理组内容', 'error');
+        return;
+      }
+      const namePrefix = String(document.getElementById('proxyGroupNamePrefix').value || '').trim();
+
+      try {
+        let result;
+        await withBusy(async () => {
+          result = await api('/admin/api/proxy-groups/import', {
+            method: 'POST',
+            body: JSON.stringify({
+              groups: items,
+              name_prefix: namePrefix
+            })
+          });
+        }, '正在导入代理组...');
+        const summary = result?.message || `代理组导入完成：成功 ${Number(result?.result?.imported || 0)}`;
+        showMessage(globalMessage, summary, result?.success === false && !result?.partial ? 'error' : 'success');
+        document.getElementById('proxyGroupsInput').value = '';
+        await Promise.all([loadProxyGroups(), loadAccounts()]);
+      } catch (error) {
+        showMessage(globalMessage, error.message, 'error');
+      }
+    }
+
+    async function submitProxyGroupAssign() {
+      const accountIdsFromText = normalizeIdsFromText(document.getElementById('matchAccountIds').value);
+      const proxyGroupIdsFromText = normalizeIdsFromText(document.getElementById('matchProxyGroupIds').value);
+      const accountIds = accountIdsFromText.length ? accountIdsFromText : collectSelectedOrVisibleIds(selectedAccountIds, visibleAccounts);
+      const proxyGroupIds = proxyGroupIdsFromText.length ? proxyGroupIdsFromText : collectSelectedOrVisibleIds(selectedProxyGroupIds, visibleProxyGroups);
+      const accountsPerProxy = Number(document.getElementById('accountsPerProxy').value || 5);
+
+      if (!accountIds.length) {
+        showMessage(globalMessage, '请选择或输入需要分配的账号', 'error');
+        return;
+      }
+      if (!proxyGroupIds.length) {
+        showMessage(globalMessage, '请选择或输入代理组', 'error');
+        return;
+      }
+
+      try {
+        let result;
+        await withBusy(async () => {
+          result = await api('/admin/api/proxy-groups/assign', {
+            method: 'POST',
+            body: JSON.stringify({
+              account_ids: accountIds,
+              proxy_group_ids: proxyGroupIds,
+              accounts_per_proxy: accountsPerProxy
+            })
+          });
+        }, '正在匹配账号和代理组...');
+        const updated = Number(result?.result?.updated || 0);
+        showMessage(globalMessage, `匹配完成：已更新 ${updated} 个账号`, 'success');
+        await Promise.all([loadAccounts(), loadProxyGroups(), loadExport(), loadStatus()]);
       } catch (error) {
         showMessage(globalMessage, error.message, 'error');
       }
@@ -1027,14 +1602,37 @@
     document.getElementById('warmPoolButton').addEventListener('click', warmPool);
     document.getElementById('refreshPoolButton').addEventListener('click', refreshPool);
     document.getElementById('reloadAccountsButton').addEventListener('click', () => withBusy(loadAccounts, '正在刷新账号列表...').catch((error) => showMessage(globalMessage, error.message, 'error')));
+    document.getElementById('selectVisibleAccountsButton').addEventListener('click', () => {
+      visibleAccounts.forEach((account) => selectedAccountIds.add(String(account.id || '')));
+      renderAccounts(currentAccounts);
+    });
+    document.getElementById('clearAccountSelectionButton').addEventListener('click', () => {
+      selectedAccountIds.clear();
+      renderAccounts(currentAccounts);
+    });
     document.getElementById('applyAccountViewButton').addEventListener('click', () => renderAccounts(currentAccounts));
     document.getElementById('reloadModelViewButton').addEventListener('click', () => withBusy(loadModels, '正在加载模型目录...').catch((error) => showMessage(globalMessage, error.message, 'error')));
     document.getElementById('reloadConfigButton').addEventListener('click', () => withBusy(loadConfig, '正在加载配置...').catch((error) => showMessage(globalMessage, error.message, 'error')));
     document.getElementById('reloadDoctorButton').addEventListener('click', () => withBusy(loadDoctor, '正在执行诊断...').catch((error) => showMessage(globalMessage, error.message, 'error')));
     document.getElementById('reloadExportButton').addEventListener('click', () => withBusy(loadExport, '正在加载导出数据...').catch((error) => showMessage(globalMessage, error.message, 'error')));
     document.getElementById('applyLogsFilterButton').addEventListener('click', () => withBusy(loadLogs, '正在加载日志...').catch((error) => showMessage(globalMessage, error.message, 'error')));
-    document.getElementById('importButton').addEventListener('click', submitImport);
-    document.getElementById('accountList').addEventListener('click', handleAccountAction);
+    document.getElementById('bulkImportButton').addEventListener('click', submitBulkImport);
+    document.getElementById('proxyGroupImportButton').addEventListener('click', submitProxyGroupImport);
+    document.getElementById('matchButton').addEventListener('click', submitProxyGroupAssign);
+    document.getElementById('reloadProxyGroupsButton').addEventListener('click', () => withBusy(loadProxyGroups, '正在刷新代理组...').catch((error) => showMessage(globalMessage, error.message, 'error')));
+    document.getElementById('reloadProxyGroupsButtonTop').addEventListener('click', () => withBusy(loadProxyGroups, '正在刷新代理组...').catch((error) => showMessage(globalMessage, error.message, 'error')));
+    document.getElementById('selectVisibleProxyGroupsButton').addEventListener('click', () => {
+      visibleProxyGroups.forEach((group) => selectedProxyGroupIds.add(String(group.id || '')));
+      renderProxyGroups(currentProxyGroups, true);
+    });
+    document.getElementById('clearProxyGroupSelectionButton').addEventListener('click', () => {
+      selectedProxyGroupIds.clear();
+      renderProxyGroups(currentProxyGroups, true);
+    });
+    document.getElementById('accountTableBody').addEventListener('click', handleAccountAction);
+    document.getElementById('proxyGroupTableBody').addEventListener('click', handleAccountAction);
+    document.getElementById('accountTableBody').addEventListener('change', handleAccountSelectionChange);
+    document.getElementById('proxyGroupTableBody').addEventListener('change', handleProxyGroupSelectionChange);
 
     init();
     setInterval(() => {

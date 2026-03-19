@@ -38,11 +38,12 @@ type Snapshot struct {
 }
 
 type Catalog struct {
-	mu       sync.RWMutex
-	cfg      Config
-	tokens   ports.TokenProvider
-	fallback *static.Catalog
-	client   *http.Client
+	mu         sync.RWMutex
+	cfg        Config
+	tokens     ports.TokenProvider
+	fallback   *static.Catalog
+	client     *http.Client
+	clientPool *clihttp.ClientPool
 
 	lastRefresh time.Time
 	lastError   string
@@ -72,7 +73,8 @@ func New(cfg Config, tokens ports.TokenProvider) *Catalog {
 			Timeout:   timeout,
 			Transport: clihttp.NewTransport(clihttp.Config{ProxyURL: cfg.ProxyURL}),
 		},
-		modelSet: make(map[string]bool),
+		clientPool: clihttp.NewClientPool(timeout),
+		modelSet:   make(map[string]bool),
 	}
 }
 
@@ -159,7 +161,17 @@ func (c *Catalog) Refresh(ctx context.Context) (int, error) {
 	req.Header.Set("Authorization", "Bearer "+lease.Token)
 	req.Header.Set("X-Amzn-Codewhisperer-Optout", "true")
 
-	resp, err := c.client.Do(req)
+	httpClient := c.client
+	if c.clientPool != nil {
+		if runtimeClient, clientErr := c.clientPool.ClientForProxy(proxyURLFromLeaseMetadata(lease.Metadata, c.cfg.ProxyURL)); clientErr == nil {
+			httpClient = runtimeClient
+		} else {
+			c.setLastError(clientErr.Error())
+			return 0, clientErr
+		}
+	}
+
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		_ = c.tokens.ReportFailure(ctx, lease, account.FailureMeta{
 			RequestID: "catalog-refresh",
@@ -232,6 +244,15 @@ func (c *Catalog) Refresh(ctx context.Context) (int, error) {
 		Model:     "catalog-refresh",
 	})
 	return len(models), nil
+}
+
+func proxyURLFromLeaseMetadata(metadata map[string]string, fallback string) string {
+	if metadata != nil {
+		if proxyURL := strings.TrimSpace(metadata["proxy_url"]); proxyURL != "" {
+			return proxyURL
+		}
+	}
+	return fallback
 }
 
 func (c *Catalog) Snapshot() Snapshot {

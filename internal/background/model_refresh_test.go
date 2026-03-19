@@ -25,7 +25,13 @@ func TestModelRefreshRunnerRunsOnStartAndInterval(t *testing.T) {
 	defer cancel()
 
 	runner.Start(ctx)
-	time.Sleep(55 * time.Millisecond)
+	deadline := time.Now().Add(250 * time.Millisecond)
+	for time.Now().Before(deadline) {
+		if refresher.count.Load() >= 2 {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 	cancel()
 
 	if refresher.count.Load() < 2 {

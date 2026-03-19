@@ -78,12 +78,14 @@ kirocli-go/
 状态文件默认写入：
 
 - `data/accounts_state.json`
+- `data/proxy_state.json`
 - `data/stats_state.json`
 - `data/catalog_state.json`
 
 可通过环境变量改掉：
 
 - `KIROCLI_GO_ACCOUNT_STATE_PATH`
+- `KIROCLI_GO_PROXY_STATE_PATH`
 - `KIROCLI_GO_STATS_STATE_PATH`
 - `KIROCLI_GO_CATALOG_STATE_PATH`
 

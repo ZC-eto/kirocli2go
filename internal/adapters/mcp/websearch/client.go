@@ -36,6 +36,7 @@ type Client struct {
 	cfg        Config
 	tokens     ports.TokenProvider
 	httpClient *http.Client
+	clientPool *clihttp.ClientPool
 }
 
 type rpcRequest struct {
@@ -95,6 +96,7 @@ func New(cfg Config, tokens ports.TokenProvider) *Client {
 			Timeout:   timeout,
 			Transport: clihttp.NewTransport(clihttp.Config{ProxyURL: cfg.ProxyURL}),
 		},
+		clientPool: clihttp.NewClientPool(timeout),
 	}
 }
 
@@ -163,7 +165,20 @@ func (c *Client) call(ctx context.Context, lease account.Lease, req SearchReques
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Authorization", "Bearer "+lease.Token)
 
-	resp, err := c.httpClient.Do(httpReq)
+	httpClient := c.httpClient
+	if c.clientPool != nil {
+		if runtimeClient, clientErr := c.clientPool.ClientForProxy(proxyURLFromLeaseMetadata(lease.Metadata, c.cfg.ProxyURL)); clientErr == nil {
+			httpClient = runtimeClient
+		} else {
+			return nil, &domainerrors.UpstreamError{
+				Category: domainerrors.CategoryUnknown,
+				Message:  clientErr.Error(),
+				Cause:    clientErr,
+			}
+		}
+	}
+
+	resp, err := httpClient.Do(httpReq)
 	if err != nil {
 		return nil, &domainerrors.UpstreamError{
 			Category:  domainerrors.CategoryNetwork,
@@ -484,4 +499,13 @@ func mapCategoryToFailureReason(err error) account.FailureReason {
 	default:
 		return account.FailureReasonUnknown
 	}
+}
+
+func proxyURLFromLeaseMetadata(metadata map[string]string, fallback string) string {
+	if metadata != nil {
+		if proxyURL := strings.TrimSpace(metadata["proxy_url"]); proxyURL != "" {
+			return proxyURL
+		}
+	}
+	return fallback
 }

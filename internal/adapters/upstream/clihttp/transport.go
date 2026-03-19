@@ -18,8 +18,8 @@ import (
 
 	domainerrors "kirocli-go/internal/domain/errors"
 	"kirocli-go/internal/domain/message"
-	"kirocli-go/internal/domain/truncation"
 	"kirocli-go/internal/domain/stream"
+	"kirocli-go/internal/domain/truncation"
 	"kirocli-go/internal/ports"
 )
 
@@ -36,6 +36,7 @@ type Config struct {
 type Client struct {
 	cfg        Config
 	httpClient *http.Client
+	clientPool *ClientPool
 }
 
 type qEvent struct {
@@ -64,16 +65,24 @@ func New(cfg Config) *Client {
 		cfg.Timeout = 5 * time.Minute
 	}
 
-	return &Client{
-		cfg: cfg,
-		httpClient: &http.Client{
+	pool := NewClientPool(cfg.Timeout)
+	httpClient, err := pool.ClientForProxy(cfg.ProxyURL)
+	if err != nil {
+		httpClient = &http.Client{
 			Timeout:   cfg.Timeout,
-			Transport: NewTransport(cfg),
-		},
+			Transport: NewTransport(Config{}),
+		}
+	}
+
+	return &Client{
+		cfg:        cfg,
+		httpClient: httpClient,
+		clientPool: pool,
 	}
 }
 
 func NewTransport(cfg Config) *http.Transport {
+	normalizedProxyURL, _ := NormalizeProxyURL(cfg.ProxyURL)
 	transport := &http.Transport{
 		Proxy:               nil,
 		MaxIdleConns:        100,
@@ -81,11 +90,11 @@ func NewTransport(cfg Config) *http.Transport {
 		IdleConnTimeout:     90 * time.Second,
 		ForceAttemptHTTP2:   false,
 		TLSNextProto:        map[string]func(string, *tls.Conn) http.RoundTripper{},
-		DialTLSContext:      makeUTLSDialer(cfg.ProxyURL),
+		DialTLSContext:      makeUTLSDialer(normalizedProxyURL),
 	}
 
-	if cfg.ProxyURL != "" {
-		if parsed, err := url.Parse(cfg.ProxyURL); err == nil {
+	if normalizedProxyURL != "" {
+		if parsed, err := url.Parse(normalizedProxyURL); err == nil {
 			transport.Proxy = http.ProxyURL(parsed)
 		}
 	}
@@ -99,7 +108,14 @@ func (c *Client) Send(ctx context.Context, req ports.UpstreamRequest) (ports.Ups
 		return nil, err
 	}
 
-	resp, err := c.httpClient.Do(httpReq)
+	httpClient := c.httpClient
+	if c.clientPool != nil {
+		if runtimeClient, err := c.clientPool.ClientForProxy(proxyURLFromMetadata(req.Lease.Metadata, c.cfg.ProxyURL)); err == nil {
+			httpClient = runtimeClient
+		}
+	}
+
+	resp, err := httpClient.Do(httpReq)
 	if err != nil {
 		return nil, &domainerrors.UpstreamError{
 			Category:  domainerrors.CategoryNetwork,
@@ -468,6 +484,15 @@ func makeUTLSDialer(proxyURL string) func(ctx context.Context, network, addr str
 		}
 		return tlsConn, nil
 	}
+}
+
+func proxyURLFromMetadata(metadata map[string]string, fallback string) string {
+	if metadata != nil {
+		if proxyURL := strings.TrimSpace(metadata["proxy_url"]); proxyURL != "" {
+			return proxyURL
+		}
+	}
+	return fallback
 }
 
 func dialNetwork(ctx context.Context, network, addr, proxyURL string) (net.Conn, error) {

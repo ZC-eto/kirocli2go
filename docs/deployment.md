@@ -40,6 +40,7 @@ kirocli-go/
 ├── .env
 ├── data/
 │   ├── accounts_state.json
+│   ├── proxy_state.json
 │   ├── stats_state.json
 │   └── catalog_state.json
 └── logs/
@@ -91,6 +92,14 @@ curl -X POST http://127.0.0.1:8089/admin/api/models/refresh \
 
 - 手动导入的 managed 账号
 - 外部来源账号的 enable/disable/weight/cooldown override
+
+### `proxy_state.json`
+
+保存：
+
+- 代理组定义
+- 代理 URL
+- 启用/禁用状态
 
 ### `stats_state.json`
 

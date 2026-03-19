@@ -44,6 +44,7 @@ func NewApp(cfg config.Config) (*App, error) {
 		ProxyURL:       cfg.Upstream.CLIProxyURL,
 		RefreshTimeout: cfg.Accounts.RefreshTimeout,
 		StatePath:      cfg.Accounts.StatePath,
+		ProxyStatePath: cfg.Accounts.ProxyStatePath,
 	})
 	if err != nil {
 		return nil, err

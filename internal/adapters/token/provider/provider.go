@@ -34,17 +34,20 @@ type Config struct {
 	ProxyURL       string
 	RefreshTimeout time.Duration
 	StatePath      string
+	ProxyStatePath string
 }
 
 type Provider struct {
-	mu         sync.Mutex
-	cfg        Config
-	httpClient *http.Client
-	accounts   []*tokenAccount
-	index      int
-	rng        *rand.Rand
-	lastWarmAt time.Time
-	poolStats  poolStats
+	mu          sync.Mutex
+	cfg         Config
+	httpClient  *http.Client
+	clientPool  *clihttp.ClientPool
+	accounts    []*tokenAccount
+	proxyGroups map[string]*proxyGroupState
+	index       int
+	rng         *rand.Rand
+	lastWarmAt  time.Time
+	poolStats   poolStats
 }
 
 type poolStats struct {
@@ -69,6 +72,7 @@ type managedAccountState struct {
 	RefreshToken  string         `json:"refresh_token,omitempty"`
 	ClientID      string         `json:"client_id,omitempty"`
 	ClientSecret  string         `json:"client_secret,omitempty"`
+	ProxyGroupID  string         `json:"proxy_group_id,omitempty"`
 	ExpiresAt     int64          `json:"expires_at,omitempty"`
 	Disabled      bool           `json:"disabled,omitempty"`
 	Status        account.Status `json:"status,omitempty"`
@@ -80,26 +84,29 @@ type managedAccountState struct {
 }
 
 type ManagedExport struct {
-	ID            string         `json:"id"`
-	Source        string         `json:"source"`
-	Weight        int            `json:"weight"`
-	BearerToken   string         `json:"bearer_token,omitempty"`
-	RefreshToken  string         `json:"refresh_token,omitempty"`
-	ClientID      string         `json:"client_id,omitempty"`
-	ClientSecret  string         `json:"client_secret,omitempty"`
-	ExpiresAt     int64          `json:"expires_at,omitempty"`
-	Disabled      bool           `json:"disabled,omitempty"`
-	Status        account.Status `json:"status,omitempty"`
-	CooldownUntil int64          `json:"cooldown_until,omitempty"`
-	LastUsedAt    int64          `json:"last_used_at,omitempty"`
-	LastError     string         `json:"last_error,omitempty"`
-	Failures      int            `json:"failures,omitempty"`
+	ID             string         `json:"id"`
+	Source         string         `json:"source"`
+	Weight         int            `json:"weight"`
+	BearerToken    string         `json:"bearer_token,omitempty"`
+	RefreshToken   string         `json:"refresh_token,omitempty"`
+	ClientID       string         `json:"client_id,omitempty"`
+	ClientSecret   string         `json:"client_secret,omitempty"`
+	ProxyGroupID   string         `json:"proxy_group_id,omitempty"`
+	ProxyGroupName string         `json:"proxy_group_name,omitempty"`
+	ExpiresAt      int64          `json:"expires_at,omitempty"`
+	Disabled       bool           `json:"disabled,omitempty"`
+	Status         account.Status `json:"status,omitempty"`
+	CooldownUntil  int64          `json:"cooldown_until,omitempty"`
+	LastUsedAt     int64          `json:"last_used_at,omitempty"`
+	LastError      string         `json:"last_error,omitempty"`
+	Failures       int            `json:"failures,omitempty"`
 }
 
 type accountOverride struct {
 	Disabled      bool           `json:"disabled,omitempty"`
 	Status        account.Status `json:"status,omitempty"`
 	Weight        int            `json:"weight,omitempty"`
+	ProxyGroupID  string         `json:"proxy_group_id,omitempty"`
 	CooldownUntil int64          `json:"cooldown_until,omitempty"`
 	LastUsedAt    int64          `json:"last_used_at,omitempty"`
 	LastRefreshAt int64          `json:"last_refresh_at,omitempty"`
@@ -116,23 +123,27 @@ type ImportRequest struct {
 	RefreshToken string `json:"refresh_token,omitempty"`
 	ClientID     string `json:"client_id,omitempty"`
 	ClientSecret string `json:"client_secret,omitempty"`
+	ProxyGroupID string `json:"proxy_group_id,omitempty"`
 }
 
 type AccountSnapshot struct {
-	ID            string         `json:"id"`
-	Source        string         `json:"source"`
-	Status        account.Status `json:"status"`
-	Weight        int            `json:"weight"`
-	Disabled      bool           `json:"disabled"`
-	InPool        bool           `json:"in_pool,omitempty"`
-	HasBearer     bool           `json:"has_bearer"`
-	HasRefresh    bool           `json:"has_refresh"`
-	ExpiresAt     int64          `json:"expires_at,omitempty"`
-	CooldownUntil int64          `json:"cooldown_until,omitempty"`
-	LastUsedAt    int64          `json:"last_used_at,omitempty"`
-	LastRefreshAt int64          `json:"last_refresh_at,omitempty"`
-	LastError     string         `json:"last_error,omitempty"`
-	Failures      int            `json:"failures,omitempty"`
+	ID             string         `json:"id"`
+	Source         string         `json:"source"`
+	Status         account.Status `json:"status"`
+	Weight         int            `json:"weight"`
+	Disabled       bool           `json:"disabled"`
+	InPool         bool           `json:"in_pool,omitempty"`
+	HasBearer      bool           `json:"has_bearer"`
+	HasRefresh     bool           `json:"has_refresh"`
+	ProxyGroupID   string         `json:"proxy_group_id,omitempty"`
+	ProxyGroupName string         `json:"proxy_group_name,omitempty"`
+	ProxyURLMasked string         `json:"proxy_url_masked,omitempty"`
+	ExpiresAt      int64          `json:"expires_at,omitempty"`
+	CooldownUntil  int64          `json:"cooldown_until,omitempty"`
+	LastUsedAt     int64          `json:"last_used_at,omitempty"`
+	LastRefreshAt  int64          `json:"last_refresh_at,omitempty"`
+	LastError      string         `json:"last_error,omitempty"`
+	Failures       int            `json:"failures,omitempty"`
 }
 
 type tokenAccount struct {
@@ -142,6 +153,7 @@ type tokenAccount struct {
 	RefreshToken  string
 	ClientID      string
 	ClientSecret  string
+	ProxyGroupID  string
 	ExpiresAt     int64
 	Disabled      bool
 	Status        account.Status
@@ -217,7 +229,9 @@ func New(cfg Config) (*Provider, error) {
 			Timeout:   cfg.RefreshTimeout,
 			Transport: clihttp.NewTransport(clihttp.Config{ProxyURL: cfg.ProxyURL}),
 		},
-		rng: rand.New(rand.NewSource(time.Now().UnixNano())),
+		clientPool:  clihttp.NewClientPool(cfg.RefreshTimeout),
+		proxyGroups: make(map[string]*proxyGroupState),
+		rng:         rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 
 	accounts, err := p.loadAccounts()
@@ -226,6 +240,9 @@ func New(cfg Config) (*Provider, error) {
 	}
 	p.accounts = accounts
 	if err := p.loadState(); err != nil {
+		return nil, err
+	}
+	if err := p.loadProxyState(); err != nil {
 		return nil, err
 	}
 
@@ -271,6 +288,22 @@ func (p *Provider) Acquire(ctx context.Context, hint account.AcquireHint) (accou
 			}
 			continue
 		}
+		proxyURL, proxyGroup, err := p.resolveProxyForAccountLocked(item)
+		if err != nil {
+			p.applyFailure(item, account.FailureMeta{
+				Reason:  mapProviderErrorToFailureReason(err),
+				Message: err.Error(),
+			})
+			preferred = filterAccounts(preferred, item.ID)
+			if len(preferred) == 0 && len(candidates) > 0 {
+				candidates = filterAccounts(candidates, item.ID)
+				preferred = candidates
+			}
+			if len(preferred) == 0 {
+				break
+			}
+			continue
+		}
 
 		item.Status = account.StatusActive
 		item.LastUsedAt = time.Now().Unix()
@@ -279,13 +312,21 @@ func (p *Provider) Acquire(ctx context.Context, hint account.AcquireHint) (accou
 			p.lastWarmAt = time.Now()
 		}
 		p.index++
+		metadata := map[string]string{
+			"source": item.Source,
+		}
+		if proxyURL != "" {
+			metadata["proxy_url"] = proxyURL
+		}
+		if proxyGroup != nil {
+			metadata["proxy_group_id"] = proxyGroup.ID
+			metadata["proxy_group_name"] = proxyGroup.Name
+		}
 		return account.Lease{
 			AccountID: item.ID,
 			Token:     item.BearerToken,
 			Profile:   account.ProfileCLI,
-			Metadata: map[string]string{
-				"source": item.Source,
-			},
+			Metadata:  metadata,
 		}, nil
 	}
 
@@ -389,22 +430,9 @@ func (p *Provider) SnapshotAccounts() []AccountSnapshot {
 		if !item.Disabled && item.CooldownUntil <= now && status == account.StatusCooling {
 			status = account.StatusActive
 		}
-		result = append(result, AccountSnapshot{
-			ID:            item.ID,
-			Source:        item.Source,
-			Status:        status,
-			Weight:        normalizedWeight(item.Weight),
-			Disabled:      item.Disabled,
-			InPool:        item.InPool,
-			HasBearer:     item.BearerToken != "",
-			HasRefresh:    item.RefreshToken != "",
-			ExpiresAt:     item.ExpiresAt,
-			CooldownUntil: item.CooldownUntil,
-			LastUsedAt:    item.LastUsedAt,
-			LastRefreshAt: item.LastRefreshAt,
-			LastError:     item.LastError,
-			Failures:      item.Failures,
-		})
+		snapshot := p.snapshotFromTokenAccount(item)
+		snapshot.Status = status
+		result = append(result, snapshot)
 	}
 	return result
 }
@@ -496,7 +524,7 @@ func (p *Provider) RefreshAccount(ctx context.Context, id string) (AccountSnapsh
 	if err := p.saveStateLocked(); err != nil {
 		return AccountSnapshot{}, err
 	}
-	return snapshotFromTokenAccount(item), nil
+	return p.snapshotFromTokenAccount(item), nil
 }
 
 func (p *Provider) ImportAccount(ctx context.Context, req ImportRequest) (AccountSnapshot, error) {
@@ -504,43 +532,14 @@ func (p *Provider) ImportAccount(ctx context.Context, req ImportRequest) (Accoun
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	if strings.TrimSpace(req.BearerToken) == "" && strings.TrimSpace(req.RefreshToken) == "" {
-		return AccountSnapshot{}, fmt.Errorf("bearer_token or refresh_token is required")
+	accountSnapshot, err := p.importAccountLocked(req)
+	if err != nil {
+		return AccountSnapshot{}, err
 	}
-
-	id := strings.TrimSpace(req.ID)
-	if id == "" {
-		id = fmt.Sprintf("managed-%d", time.Now().UnixNano())
-	}
-	if _, err := p.findAccountLocked(id); err == nil {
-		return AccountSnapshot{}, fmt.Errorf("account %s already exists", id)
-	}
-
-	item := &tokenAccount{
-		ID:           id,
-		Weight:       normalizedWeight(req.Weight),
-		BearerToken:  strings.TrimSpace(req.BearerToken),
-		RefreshToken: strings.TrimSpace(req.RefreshToken),
-		ClientID:     strings.TrimSpace(req.ClientID),
-		ClientSecret: strings.TrimSpace(req.ClientSecret),
-		Status:       account.StatusActive,
-		Source:       "managed",
-	}
-	if item.BearerToken == "" {
-		if err := p.ensureBearer(item, true); err != nil {
-			return AccountSnapshot{}, err
-		}
-	}
-	if p.cfg.ActivePoolSize > 0 && p.warmedCountLocked() < p.cfg.ActivePoolSize {
-		item.InPool = true
-		p.lastWarmAt = time.Now()
-	}
-
-	p.accounts = append(p.accounts, item)
 	if err := p.saveStateLocked(); err != nil {
 		return AccountSnapshot{}, err
 	}
-	return snapshotFromTokenAccount(item), nil
+	return accountSnapshot, nil
 }
 
 func (p *Provider) ExportAccounts() []ManagedExport {
@@ -549,21 +548,27 @@ func (p *Provider) ExportAccounts() []ManagedExport {
 
 	result := make([]ManagedExport, 0, len(p.accounts))
 	for _, item := range p.accounts {
+		proxyGroupName := ""
+		if group, ok := p.proxyGroups[item.ProxyGroupID]; ok {
+			proxyGroupName = group.Name
+		}
 		result = append(result, ManagedExport{
-			ID:            item.ID,
-			Source:        item.Source,
-			Weight:        normalizedWeight(item.Weight),
-			BearerToken:   item.BearerToken,
-			RefreshToken:  item.RefreshToken,
-			ClientID:      item.ClientID,
-			ClientSecret:  item.ClientSecret,
-			ExpiresAt:     item.ExpiresAt,
-			Disabled:      item.Disabled,
-			Status:        item.Status,
-			CooldownUntil: item.CooldownUntil,
-			LastUsedAt:    item.LastUsedAt,
-			LastError:     item.LastError,
-			Failures:      item.Failures,
+			ID:             item.ID,
+			Source:         item.Source,
+			Weight:         normalizedWeight(item.Weight),
+			BearerToken:    item.BearerToken,
+			RefreshToken:   item.RefreshToken,
+			ClientID:       item.ClientID,
+			ClientSecret:   item.ClientSecret,
+			ProxyGroupID:   item.ProxyGroupID,
+			ProxyGroupName: proxyGroupName,
+			ExpiresAt:      item.ExpiresAt,
+			Disabled:       item.Disabled,
+			Status:         item.Status,
+			CooldownUntil:  item.CooldownUntil,
+			LastUsedAt:     item.LastUsedAt,
+			LastError:      item.LastError,
+			Failures:       item.Failures,
 		})
 	}
 	return result
@@ -625,6 +630,7 @@ func (p *Provider) loadState() error {
 			RefreshToken:  managed.RefreshToken,
 			ClientID:      managed.ClientID,
 			ClientSecret:  managed.ClientSecret,
+			ProxyGroupID:  managed.ProxyGroupID,
 			ExpiresAt:     managed.ExpiresAt,
 			Disabled:      managed.Disabled,
 			Status:        managed.Status,
@@ -667,6 +673,7 @@ func (p *Provider) saveStateLocked() error {
 				RefreshToken:  item.RefreshToken,
 				ClientID:      item.ClientID,
 				ClientSecret:  item.ClientSecret,
+				ProxyGroupID:  item.ProxyGroupID,
 				ExpiresAt:     item.ExpiresAt,
 				Disabled:      item.Disabled,
 				Status:        item.Status,
@@ -682,6 +689,7 @@ func (p *Provider) saveStateLocked() error {
 			Disabled:      item.Disabled,
 			Status:        item.Status,
 			Weight:        normalizedWeight(item.Weight),
+			ProxyGroupID:  item.ProxyGroupID,
 			CooldownUntil: item.CooldownUntil,
 			LastUsedAt:    item.LastUsedAt,
 			LastRefreshAt: item.LastRefreshAt,
@@ -847,7 +855,21 @@ func (p *Provider) ensureBearer(item *tokenAccount, force bool) error {
 	for attempt := 0; attempt < p.cfg.MaxRefreshTry; attempt++ {
 		req.Header.Set("Amz-Sdk-Invocation-Id", fmt.Sprintf("oidc-%d-%d", time.Now().UnixNano(), attempt))
 
-		resp, err := p.httpClient.Do(req)
+		proxyURL, _, err := p.resolveProxyForAccountLocked(item)
+		if err != nil {
+			return err
+		}
+		httpClient := p.httpClient
+		if p.clientPool != nil {
+			if runtimeClient, clientErr := p.clientPool.ClientForProxy(proxyURL); clientErr == nil {
+				httpClient = runtimeClient
+			} else {
+				lastErr = clientErr
+				continue
+			}
+		}
+
+		resp, err := httpClient.Do(req)
 		if err != nil {
 			lastErr = &domainerrors.UpstreamError{
 				Category:  domainerrors.CategoryNetwork,
@@ -1083,22 +1105,75 @@ func (p *Provider) findAccountLocked(id string) (*tokenAccount, error) {
 	return nil, fmt.Errorf("account %s not found", id)
 }
 
-func snapshotFromTokenAccount(item *tokenAccount) AccountSnapshot {
+func (p *Provider) importAccountLocked(req ImportRequest) (AccountSnapshot, error) {
+	if strings.TrimSpace(req.BearerToken) == "" && strings.TrimSpace(req.RefreshToken) == "" {
+		return AccountSnapshot{}, fmt.Errorf("bearer_token or refresh_token is required")
+	}
+	if proxyGroupID := strings.TrimSpace(req.ProxyGroupID); proxyGroupID != "" {
+		if _, err := p.proxyGroupLocked(proxyGroupID); err != nil {
+			return AccountSnapshot{}, err
+		}
+	}
+
+	id := strings.TrimSpace(req.ID)
+	if id == "" {
+		id = fmt.Sprintf("managed-%d", time.Now().UnixNano())
+	}
+	if _, err := p.findAccountLocked(id); err == nil {
+		return AccountSnapshot{}, fmt.Errorf("account %s already exists", id)
+	}
+
+	item := &tokenAccount{
+		ID:           id,
+		Weight:       normalizedWeight(req.Weight),
+		BearerToken:  strings.TrimSpace(req.BearerToken),
+		RefreshToken: strings.TrimSpace(req.RefreshToken),
+		ClientID:     strings.TrimSpace(req.ClientID),
+		ClientSecret: strings.TrimSpace(req.ClientSecret),
+		ProxyGroupID: strings.TrimSpace(req.ProxyGroupID),
+		Status:       account.StatusActive,
+		Source:       "managed",
+	}
+	if item.BearerToken == "" {
+		if err := p.ensureBearer(item, true); err != nil {
+			return AccountSnapshot{}, err
+		}
+	}
+	if p.cfg.ActivePoolSize > 0 && p.warmedCountLocked() < p.cfg.ActivePoolSize {
+		item.InPool = true
+		p.lastWarmAt = time.Now()
+	}
+
+	p.accounts = append(p.accounts, item)
+	return p.snapshotFromTokenAccount(item), nil
+}
+
+func (p *Provider) snapshotFromTokenAccount(item *tokenAccount) AccountSnapshot {
+	proxyGroupName := ""
+	proxyURLMasked := ""
+	if group, ok := p.proxyGroups[item.ProxyGroupID]; ok {
+		proxyGroupName = group.Name
+		proxyURLMasked = maskProxyURL(group.ProxyURL)
+	}
+
 	return AccountSnapshot{
-		ID:            item.ID,
-		Source:        item.Source,
-		Status:        item.Status,
-		Weight:        normalizedWeight(item.Weight),
-		Disabled:      item.Disabled,
-		InPool:        item.InPool,
-		HasBearer:     item.BearerToken != "",
-		HasRefresh:    item.RefreshToken != "",
-		ExpiresAt:     item.ExpiresAt,
-		CooldownUntil: item.CooldownUntil,
-		LastUsedAt:    item.LastUsedAt,
-		LastRefreshAt: item.LastRefreshAt,
-		LastError:     item.LastError,
-		Failures:      item.Failures,
+		ID:             item.ID,
+		Source:         item.Source,
+		Status:         item.Status,
+		Weight:         normalizedWeight(item.Weight),
+		Disabled:       item.Disabled,
+		InPool:         item.InPool,
+		HasBearer:      item.BearerToken != "",
+		HasRefresh:     item.RefreshToken != "",
+		ProxyGroupID:   item.ProxyGroupID,
+		ProxyGroupName: proxyGroupName,
+		ProxyURLMasked: proxyURLMasked,
+		ExpiresAt:      item.ExpiresAt,
+		CooldownUntil:  item.CooldownUntil,
+		LastUsedAt:     item.LastUsedAt,
+		LastRefreshAt:  item.LastRefreshAt,
+		LastError:      item.LastError,
+		Failures:       item.Failures,
 	}
 }
 
@@ -1108,6 +1183,7 @@ func applyManagedState(item *tokenAccount, state managedAccountState) {
 	item.RefreshToken = state.RefreshToken
 	item.ClientID = state.ClientID
 	item.ClientSecret = state.ClientSecret
+	item.ProxyGroupID = state.ProxyGroupID
 	item.ExpiresAt = state.ExpiresAt
 	item.Disabled = state.Disabled
 	item.Status = state.Status
@@ -1125,6 +1201,9 @@ func applyOverride(item *tokenAccount, override accountOverride) {
 	}
 	if override.Weight > 0 {
 		item.Weight = normalizedWeight(override.Weight)
+	}
+	if strings.TrimSpace(override.ProxyGroupID) != "" {
+		item.ProxyGroupID = override.ProxyGroupID
 	}
 	item.CooldownUntil = override.CooldownUntil
 	item.LastUsedAt = override.LastUsedAt
